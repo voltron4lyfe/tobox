@@ -191,3 +191,60 @@ def test_metrics_range(client: TestClient, make_initiative: MakeInit) -> None:
 
     bad = client.get("/api/metrics", params={"start": NEXT_DAY, "end": DAY})
     assert bad.status_code == 422
+
+
+def test_unhighlighting_promotes_next_item(client: TestClient, make_initiative: MakeInit) -> None:
+    init = make_initiative()
+    add_item(client, init["id"], title="a")
+    day = add_item(client, init["id"], title="b")
+    day = client.patch(f"/api/items/{day['items'][0]['id']}", json={"is_highlight": False}).json()
+    assert [(i["title"], i["is_highlight"]) for i in day["items"]] == [("b", True), ("a", False)]
+
+
+def test_retargeting_log_to_other_initiative_unlinks_item(
+    client: TestClient, make_initiative: MakeInit
+) -> None:
+    a = make_initiative("A", 2)
+    b = make_initiative("B", 4)
+    day = add_item(client, a["id"])
+    item_id = day["items"][0]["id"]
+    day = client.post(f"/api/days/{DAY}/logs", json={"planned_item_id": item_id}).json()
+    log_id = day["logs"][0]["id"]
+
+    day = client.patch(f"/api/logs/{log_id}", json={"title": "same target"}).json()
+    assert day["logs"][0]["planned_item_id"] == item_id
+
+    day = client.patch(f"/api/logs/{log_id}", json={"initiative_id": b["id"]}).json()
+    assert day["logs"][0]["planned_item_id"] is None
+    assert day["logs"][0]["quadrant"] == 4
+    assert day["summary"]["verdict"] == "missed"
+
+
+def test_log_link_validation(client: TestClient, make_initiative: MakeInit) -> None:
+    a = make_initiative("A", 2)
+    b = make_initiative("B", 3)
+    item_id = add_item(client, a["id"])["items"][0]["id"]
+    mismatched = {"planned_item_id": item_id, "initiative_id": b["id"]}
+    assert client.post(f"/api/days/{DAY}/logs", json=mismatched).status_code == 422
+    wrong_day = client.post(f"/api/days/{NEXT_DAY}/logs", json={"planned_item_id": item_id})
+    assert wrong_day.status_code == 422
+
+
+def test_carry_forward_selected_items(client: TestClient, make_initiative: MakeInit) -> None:
+    init = make_initiative()
+    add_item(client, init["id"], title="one")
+    day = add_item(client, init["id"], title="two")
+    two = day["items"][1]["id"]
+    body = {"to_date": NEXT_DAY, "item_ids": [two]}
+    target = client.post(f"/api/days/{DAY}/carry-forward", json=body).json()
+    assert [i["title"] for i in target["items"]] == ["two"]
+    # Carrying everything afterwards adds only what's missing.
+    target = client.post(f"/api/days/{DAY}/carry-forward", json={"to_date": NEXT_DAY}).json()
+    assert sorted(i["title"] for i in target["items"]) == ["one", "two"]
+
+
+def test_timestamps_are_utc_aware(client: TestClient, make_initiative: MakeInit) -> None:
+    init = make_initiative()
+    assert init["created_at"].endswith(("Z", "+00:00"))
+    day = client.put(f"/api/days/{DAY}", json={"planned": True}).json()
+    assert day["planned_at"].endswith(("Z", "+00:00"))

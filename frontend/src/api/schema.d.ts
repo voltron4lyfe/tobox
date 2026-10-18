@@ -210,6 +210,11 @@ export interface components {
        * Format: date
        */
       to_date: string
+      /**
+       * Item Ids
+       * @description Only carry these items (default: all unfinished).
+       */
+      item_ids?: number[] | null
     }
     /** DayMetrics */
     DayMetrics: {
@@ -523,6 +528,8 @@ export interface components {
       highlight_days: number
       /** Highlight Hit Rate */
       highlight_hit_rate: number
+      /** Plan Accuracy */
+      plan_accuracy: number
       /** Current Streak */
       current_streak: number
       /** Longest Streak */

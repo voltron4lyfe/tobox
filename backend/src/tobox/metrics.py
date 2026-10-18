@@ -123,9 +123,11 @@ def streaks(verdicts: Sequence[Verdict]) -> tuple[int, int]:
         longest = max(longest, run)
 
     current = 0
-    relevant = [v for v in verdicts if v not in NEUTRAL_VERDICTS]
+    relevant = list(verdicts)
+    # Grace applies to the final day only (today, still in progress), not to an earlier miss.
     if relevant and relevant[-1] not in HIT_VERDICTS:
         relevant = relevant[:-1]
+    relevant = [v for v in relevant if v not in NEUTRAL_VERDICTS]
     for v in reversed(relevant):
         if v not in HIT_VERDICTS:
             break
@@ -146,6 +148,7 @@ def summarize_range(days: Sequence[tuple[date, DaySummary, int | None]]) -> Metr
     with_highlight = [s for _, s, _ in tracked if s.highlight is not None]
     hits = [s for s in with_highlight if s.verdict in HIT_VERDICTS]
     with_logs = [s for _, s, _ in tracked if s.actual_minutes > 0]
+    planned_days = [s for _, s, _ in tracked if s.planned_minutes > 0]
     ratings = [r for _, _, r in tracked if r is not None]
     current, longest = streaks([s.verdict for _, s, _ in days])
 
@@ -159,6 +162,10 @@ def summarize_range(days: Sequence[tuple[date, DaySummary, int | None]]) -> Metr
         avg_plan_adherence=ratio(sum(s.plan_adherence for s in with_logs), len(with_logs)),
         highlight_days=len(hits),
         highlight_hit_rate=ratio(len(hits), len(with_highlight)),
+        plan_accuracy=ratio(
+            sum(s.actual_minutes for s in planned_days),
+            sum(s.planned_minutes for s in planned_days),
+        ),
         current_streak=current,
         longest_streak=longest,
         avg_rating=round(sum(ratings) / len(ratings), 2) if ratings else None,

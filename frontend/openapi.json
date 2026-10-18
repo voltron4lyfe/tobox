@@ -754,6 +754,21 @@
             "type": "string",
             "format": "date",
             "title": "To Date"
+          },
+          "item_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Ids",
+            "description": "Only carry these items (default: all unfinished)."
           }
         },
         "type": "object",
@@ -1595,6 +1610,10 @@
             "type": "number",
             "title": "Highlight Hit Rate"
           },
+          "plan_accuracy": {
+            "type": "number",
+            "title": "Plan Accuracy"
+          },
           "current_streak": {
             "type": "integer",
             "title": "Current Streak"
@@ -1626,6 +1645,7 @@
           "avg_plan_adherence",
           "highlight_days",
           "highlight_hit_rate",
+          "plan_accuracy",
           "current_streak",
           "longest_streak",
           "avg_rating"

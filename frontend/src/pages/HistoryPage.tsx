@@ -140,11 +140,7 @@ function HistoryBody({ data, onOpenDay }: { data: Metrics; onOpenDay: (date: str
           sub={`${s.days_tracked} days tracked`}
         />
         <Tile label="Avg. rating" value={s.avg_rating?.toFixed(1) ?? '—'} sub="out of 5" />
-        <Tile
-          label="Plan accuracy"
-          value={formatPercent(accuracy(data.days))}
-          sub="logged ÷ planned"
-        />
+        <Tile label="Plan accuracy" value={formatPercent(s.plan_accuracy)} sub="logged ÷ planned" />
       </section>
 
       <section className="card min-w-0 p-4" aria-label="Time by quadrant">
@@ -211,12 +207,6 @@ function Tile({
       {sub && <p className="mt-0.5 text-xs text-slate-500">{sub}</p>}
     </div>
   )
-}
-
-function accuracy(days: DayMetrics[]) {
-  const planned = days.reduce((a, d) => a + (d.planned_minutes ? d.planned_minutes : 0), 0)
-  const actual = days.reduce((a, d) => a + (d.planned_minutes ? d.actual_minutes : 0), 0)
-  return planned ? actual / planned : 0
 }
 
 function mixInsight(data: Metrics): string {

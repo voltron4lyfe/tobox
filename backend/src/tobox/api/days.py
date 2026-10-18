@@ -87,9 +87,11 @@ def update_item(item_id: int, body: PlannedItemUpdate, session: SessionDep) -> D
         items = services.day_items(session, item.date)
         if is_highlight:
             services.set_highlight(items, item)
-        else:
-            item.is_highlight = False
-            services.renumber(items)
+        elif item.is_highlight:
+            # A day with items always has a highlight: hand it to the next-ranked item.
+            others = [i for i in items if i is not item]
+            if others:
+                services.set_highlight(items, min(others, key=lambda i: i.rank))
     for key, value in data.items():
         setattr(item, key, value)
     session.commit()
@@ -132,6 +134,8 @@ def carry_forward(day: date, body: CarryForwardRequest, session: SessionDep) -> 
     if body.to_date == day:
         raise HTTPException(422, "to_date must differ from the source day")
     source = [i for i in services.day_items(session, day) if not i.done]
+    if body.item_ids is not None:
+        source = [i for i in source if i.id in set(body.item_ids)]
     target = services.day_items(session, body.to_date)
     already = {i.carried_from_id for i in target}
     pending = [i for i in source if i.id not in already]
@@ -158,13 +162,16 @@ def carry_forward(day: date, body: CarryForwardRequest, session: SessionDep) -> 
 
 
 def _resolve_link(
-    session: Session,
-    initiative_id: int | None,
-    planned_item_id: int | None,
-    fallback_initiative_id: int | None = None,
+    session: Session, day: date, initiative_id: int | None, planned_item_id: int | None
 ) -> tuple[Initiative, PlannedItem | None]:
+    """Validate a log's target. A linked item must be on the same day and initiative."""
     item = get_or_404(session, PlannedItem, planned_item_id) if planned_item_id else None
-    resolved = initiative_id or (item.initiative_id if item else fallback_initiative_id)
+    if item is not None:
+        if item.date != day:
+            raise HTTPException(422, "planned item belongs to a different day")
+        if initiative_id is not None and initiative_id != item.initiative_id:
+            raise HTTPException(422, "planned item belongs to a different initiative")
+    resolved = initiative_id or (item.initiative_id if item else None)
     if resolved is None:
         raise HTTPException(422, "initiative_id or planned_item_id is required")
     return get_or_404(session, Initiative, resolved), item
@@ -172,7 +179,7 @@ def _resolve_link(
 
 @router.post("/days/{day}/logs", response_model=DayOut, status_code=201)
 def add_log(day: date, body: LogEntryCreate, session: SessionDep) -> DayOut:
-    initiative, item = _resolve_link(session, body.initiative_id, body.planned_item_id)
+    initiative, item = _resolve_link(session, day, body.initiative_id, body.planned_item_id)
     session.add(
         LogEntry(
             date=day,
@@ -194,12 +201,17 @@ def update_log(log_id: int, body: LogEntryUpdate, session: SessionDep) -> DayOut
     log = get_or_404(session, LogEntry, log_id)
     data = body.model_dump(exclude_unset=True)
     if "initiative_id" in data or "planned_item_id" in data:
-        initiative, item = _resolve_link(
-            session,
-            data.pop("initiative_id", None),
-            data.pop("planned_item_id", log.planned_item_id),
-            fallback_initiative_id=log.initiative_id,
-        )
+        initiative_id = data.pop("initiative_id", None)
+        if "planned_item_id" in data:
+            item_id = data.pop("planned_item_id")
+        else:
+            # Changing only the initiative unlinks an item that belongs to another initiative.
+            current = session.get(PlannedItem, log.planned_item_id) if log.planned_item_id else None
+            keep = current is not None and initiative_id in (None, current.initiative_id)
+            item_id = current.id if current is not None and keep else None
+        if initiative_id is None and item_id is None:
+            initiative_id = log.initiative_id
+        initiative, item = _resolve_link(session, log.date, initiative_id, item_id)
         log.initiative_id = initiative.id
         log.quadrant = initiative.quadrant
         log.planned_item_id = item.id if item else None

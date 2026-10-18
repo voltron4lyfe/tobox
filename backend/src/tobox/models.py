@@ -13,14 +13,36 @@ time so history stays accurate if an initiative is later re-classified.
 import enum
 from datetime import UTC, date, datetime
 
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, String, Text
+from sqlalchemy import CheckConstraint, Date, DateTime, Dialect, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import TypeDecorator
 
 from tobox.db import Base
 
 
 def utcnow() -> datetime:
     return datetime.now(UTC)
+
+
+class UTCDateTime(TypeDecorator[datetime]):
+    """Timezone-aware datetime that always round-trips as UTC.
+
+    SQLite drops tzinfo on storage, so naive values read back are re-tagged as UTC; without this
+    the API would emit offset-less timestamps that browsers interpret as local time.
+    """
+
+    impl = DateTime(timezone=True)
+    cache_ok = True
+
+    def process_bind_param(self, value: datetime | None, dialect: Dialect) -> datetime | None:  # noqa: ARG002
+        if value is not None and value.tzinfo is None:
+            value = value.replace(tzinfo=UTC)
+        return value.astimezone(UTC) if value is not None else None
+
+    def process_result_value(self, value: datetime | None, dialect: Dialect) -> datetime | None:  # noqa: ARG002
+        if value is not None and value.tzinfo is None:
+            return value.replace(tzinfo=UTC)
+        return value
 
 
 class InitiativeStatus(enum.StrEnum):
@@ -40,10 +62,8 @@ class Initiative(Base):
     quadrant: Mapped[int]
     status: Mapped[InitiativeStatus] = mapped_column(String(16), default=InitiativeStatus.active)
     sort_order: Mapped[int] = mapped_column(default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, onupdate=utcnow
-    )
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, onupdate=utcnow)
 
 
 class Day(Base):
@@ -56,10 +76,10 @@ class Day(Base):
 
     date: Mapped[date] = mapped_column(Date, primary_key=True)
     intention: Mapped[str] = mapped_column(Text, default="")
-    planned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    planned_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), default=None)
     reflection: Mapped[str] = mapped_column(Text, default="")
     rating: Mapped[int | None] = mapped_column(default=None)
-    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    reviewed_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), default=None)
 
 
 class PlannedItem(Base):
@@ -80,7 +100,7 @@ class PlannedItem(Base):
     carried_from_id: Mapped[int | None] = mapped_column(
         ForeignKey("planned_items.id", ondelete="SET NULL"), default=None
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
     initiative: Mapped[Initiative] = relationship(lazy="joined")
 
@@ -103,6 +123,6 @@ class LogEntry(Base):
     title: Mapped[str] = mapped_column(String(300))
     quadrant: Mapped[int]
     minutes: Mapped[int] = mapped_column(default=30)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
     initiative: Mapped[Initiative] = relationship(lazy="joined")

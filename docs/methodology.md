@@ -65,7 +65,7 @@ tested). Minutes come from log entries; planned minutes come from item estimates
 |---|---|
 | **Days tracked** | Days whose verdict is not `idle` |
 | **Highlight hit rate** | Days with verdict `done` or `worked` ÷ days that had a Highlight |
-| **Current / longest streak** | Consecutive hit days. `idle` days (e.g. untracked weekends) neither extend nor break a streak. The final day gets grace: if it isn't a hit yet, it's treated as in progress |
+| **Current / longest streak** | Consecutive hit days. `idle` days (e.g. untracked weekends) neither extend nor break a streak. Only the final day of the range (normally today) gets grace: if it isn’t a hit yet, it’s treated as in progress. An earlier miss always breaks the current streak |
 | **Avg. plan adherence** | Mean of daily adherence over days with logged time |
 | **Plan accuracy** | Logged ÷ planned minutes, over days that had a plan |
 | **Intended vs. actual** | Quadrant mix of planned estimates vs. logged minutes |

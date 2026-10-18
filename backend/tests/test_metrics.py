@@ -68,6 +68,7 @@ def test_verdicts(items: list[ItemFacts], logs: list[LogFacts], expected: Verdic
         (["done", "done", "missed"], (2, 2)),  # last day in progress gets grace
         (["done", "missed", "missed"], (0, 1)),
         (["unplanned", "done"], (1, 1)),
+        (["worked", "worked", "missed", "idle"], (0, 2)),  # grace is for the final day only
     ],
 )
 def test_streaks(verdicts: list[Verdict], expected: tuple[int, int]) -> None:
@@ -88,3 +89,4 @@ def test_summarize_range_skips_idle_days() -> None:
     assert s.highlight_hit_rate == 0.5
     assert s.avg_rating == 3
     assert s.avg_plan_adherence == 0.5
+    assert s.plan_accuracy == 1.0  # 120 logged / 120 planned

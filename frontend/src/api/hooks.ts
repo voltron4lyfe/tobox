@@ -124,11 +124,11 @@ export function useReorderItems(date: string) {
 }
 
 export function useCarryForward(date: string) {
-  return useDayMutation((toDate: string) =>
+  return useDayMutation(({ toDate, itemIds }: { toDate: string; itemIds?: number[] }) =>
     unwrap(
       api.POST('/api/days/{day}/carry-forward', {
         params: { path: { day: date } },
-        body: { to_date: toDate },
+        body: { to_date: toDate, item_ids: itemIds ?? null },
       }),
     ),
   )

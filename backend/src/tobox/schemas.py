@@ -84,6 +84,9 @@ class ReorderRequest(BaseModel):
 
 class CarryForwardRequest(BaseModel):
     to_date: date
+    item_ids: list[int] | None = Field(
+        default=None, description="Only carry these items (default: all unfinished)."
+    )
 
 
 # --- Log entries -------------------------------------------------------------------
@@ -199,6 +202,8 @@ class MetricsSummary(BaseModel):
     avg_plan_adherence: float
     highlight_days: int
     highlight_hit_rate: float
+    # Logged / planned minutes over days that had a plan.
+    plan_accuracy: float
     current_streak: int
     longest_streak: int
     avg_rating: float | None

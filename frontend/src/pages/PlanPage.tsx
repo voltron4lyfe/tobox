@@ -175,10 +175,7 @@ export function PlanPage() {
   const leftovers = useMemo(() => {
     const prev = yesterday.data?.items ?? []
     const carried = new Set(items.map((i) => i.carried_from_id))
-    const sameKey = new Set(items.map((i) => `${i.initiative_id}:${i.title}`))
-    return prev.filter(
-      (p) => !p.done && !carried.has(p.id) && !sameKey.has(`${p.initiative_id}:${p.title}`),
-    )
+    return prev.filter((p) => !p.done && !carried.has(p.id))
   }, [yesterday.data, items])
 
   if (day.isPending) return <LoadingBlock />
@@ -324,7 +321,7 @@ export function PlanPage() {
                   type="button"
                   className="btn-ghost px-2 py-1 text-xs"
                   disabled={carry.isPending || items.length + leftovers.length > MAX_ITEMS}
-                  onClick={() => carry.mutate(date, { onError })}
+                  onClick={() => carry.mutate({ toDate: date }, { onError })}
                 >
                   Carry all
                 </button>
@@ -335,16 +332,7 @@ export function PlanPage() {
                     <button
                       type="button"
                       disabled={full}
-                      onClick={() =>
-                        addItem.mutate(
-                          {
-                            initiative_id: p.initiative_id,
-                            title: p.title,
-                            estimate_minutes: p.estimate_minutes,
-                          },
-                          { onError },
-                        )
-                      }
+                      onClick={() => carry.mutate({ toDate: date, itemIds: [p.id] }, { onError })}
                       className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-slate-50 disabled:opacity-50 dark:hover:bg-white/5"
                     >
                       <CornerDownRight className="size-3.5 shrink-0 text-slate-400" />

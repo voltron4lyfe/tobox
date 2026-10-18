@@ -50,29 +50,36 @@ export function ReviewPage() {
   const setRating = (rating: number) => updateDay.mutate({ rating }, { onError })
   const carryForward = () =>
     unfinished.length &&
-    carry.mutate(tomorrow, {
-      onSuccess: () => toast(`Moved ${unfinished.length} item(s) to ${dayPhrase(tomorrow)}`),
-      onError,
-    })
+    carry.mutate(
+      { toDate: tomorrow },
+      {
+        onSuccess: () => toast(`Moved ${unfinished.length} item(s) to ${dayPhrase(tomorrow)}`),
+        onError,
+      },
+    )
+  // Only send the reflection if it was edited here, so a stale/empty draft never overwrites it.
   const complete = () =>
     updateDay.mutate(
-      { reflection: reflection.trim(), reviewed: true },
+      draft?.date === date ? { reflection: reflection.trim(), reviewed: true } : { reviewed: true },
       { onSuccess: () => toast('Day reviewed. Rest well.'), onError },
     )
 
+  // Review actions write to the day, so they wait until it has loaded.
+  const loaded = !!day.data
   useHotkeys([
     ...[1, 2, 3, 4, 5].map((n) => ({
       keys: String(n),
       description: `Rate day ${n}/5`,
       group: 'Review',
       hidden: n !== 1,
+      enabled: loaded,
       handler: () => setRating(n),
     })),
     {
       keys: 'c',
       description: 'Carry unfinished to tomorrow',
       group: 'Review',
-      enabled: unfinished.length > 0,
+      enabled: loaded && unfinished.length > 0,
       handler: carryForward,
     },
     {
@@ -86,6 +93,7 @@ export function ReviewPage() {
       description: 'Complete review',
       group: 'Review',
       allowInInput: true,
+      enabled: loaded,
       handler: complete,
     },
   ])
