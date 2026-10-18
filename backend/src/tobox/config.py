@@ -16,6 +16,15 @@ class Settings(BaseSettings):
     static_dir: Path | None = None
     # Build identifier reported by /api/health (the image sets it to the git tag or sha).
     version: str = "dev"
+    # Externally reachable base URL (no trailing slash). OAuth issuer + MCP resource identifier,
+    # and absolute links in notifications. Must be https unless it is localhost.
+    public_url: str = "http://localhost:8000"
+    # Required to approve AI-agent (MCP OAuth) access from anywhere but this machine's loopback.
+    owner_password: str | None = None
+    # Background loop that sends scheduled reminders. Disabled in tests.
+    scheduler_enabled: bool = True
+    # VAPID "sub" claim: how push services can contact the operator.
+    vapid_subject: str = "mailto:tobox@example.com"
 
 
 @lru_cache

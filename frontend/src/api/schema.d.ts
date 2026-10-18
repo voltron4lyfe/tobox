@@ -199,10 +199,209 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/preferences': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Preferences */
+    get: operations['get_preferences_api_preferences_get']
+    /** Put Preferences */
+    put: operations['put_preferences_api_preferences_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/channels': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Channels */
+    get: operations['list_channels_api_notifications_channels_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/test': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Send Test
+     * @description Send a sample notification through every enabled channel (not recorded in the log).
+     */
+    post: operations['send_test_api_notifications_test_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/log': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Notification Log */
+    get: operations['notification_log_api_notifications_log_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/webpush': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Webpush Config */
+    get: operations['webpush_config_api_notifications_webpush_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/webpush/subscriptions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Subscribe */
+    post: operations['subscribe_api_notifications_webpush_subscriptions_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/webpush/unsubscribe': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Unsubscribe */
+    post: operations['unsubscribe_api_notifications_webpush_unsubscribe_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/agents': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Agents
+     * @description AI agents currently holding a valid token.
+     */
+    get: operations['list_agents_api_agents_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/agents/{client_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * Disconnect Agent
+     * @description Revoke every token of an agent and forget its registration.
+     */
+    delete: operations['disconnect_agent_api_agents__client_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/agents/mcp': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Mcp Info
+     * @description Where agents connect, and whether approving them needs the owner password.
+     */
+    get: operations['mcp_info_api_agents_mcp_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
   schemas: {
+    /** AgentOut */
+    AgentOut: {
+      /** Client Id */
+      client_id: string
+      /** Name */
+      name: string
+      /** Scopes */
+      scopes: string[]
+      /**
+       * Connected At
+       * Format: date-time
+       */
+      connected_at: string
+      /** Last Used At */
+      last_used_at: string | null
+    }
     /** CarryForwardRequest */
     CarryForwardRequest: {
       /**
@@ -215,6 +414,63 @@ export interface components {
        * @description Only carry these items (default: all unfinished).
        */
       item_ids?: number[] | null
+    }
+    /** ChannelInfo */
+    ChannelInfo: {
+      /** Name */
+      name: string
+      /** Label */
+      label: string
+      /** Enabled */
+      enabled: boolean
+      /**
+       * Ready
+       * @description Configured well enough to deliver (e.g. has a device).
+       */
+      ready: boolean
+      /**
+       * Detail
+       * @default
+       */
+      detail: string
+    }
+    /**
+     * ChannelPrefs
+     * @description One entry per delivery channel. Add a field here when adding a channel to `notify`.
+     */
+    'ChannelPrefs-Input': {
+      /**
+       * @default {
+       *       "enabled": false
+       *     }
+       */
+      webpush?: components['schemas']['WebPushPref-Input']
+      /**
+       * @default {
+       *       "enabled": false,
+       *       "webhook_url": ""
+       *     }
+       */
+      discord?: components['schemas']['DiscordPref-Input']
+    }
+    /**
+     * ChannelPrefs
+     * @description One entry per delivery channel. Add a field here when adding a channel to `notify`.
+     */
+    'ChannelPrefs-Output': {
+      /**
+       * @default {
+       *       "enabled": false
+       *     }
+       */
+      webpush: components['schemas']['WebPushPref-Output']
+      /**
+       * @default {
+       *       "enabled": false,
+       *       "webhook_url": ""
+       *     }
+       */
+      discord: components['schemas']['DiscordPref-Output']
     }
     /** DayMetrics */
     DayMetrics: {
@@ -330,6 +586,44 @@ export interface components {
        * @description Mark the evening review complete.
        */
       reviewed?: boolean | null
+    }
+    /** Delivery */
+    Delivery: {
+      /** Channel */
+      channel: string
+      /** Ok */
+      ok: boolean
+      /**
+       * Detail
+       * @default
+       */
+      detail: string
+    }
+    /** DiscordPref */
+    'DiscordPref-Input': {
+      /**
+       * Enabled
+       * @default false
+       */
+      enabled?: boolean
+      /**
+       * Webhook Url
+       * @default
+       */
+      webhook_url?: string
+    }
+    /** DiscordPref */
+    'DiscordPref-Output': {
+      /**
+       * Enabled
+       * @default false
+       */
+      enabled: boolean
+      /**
+       * Webhook Url
+       * @default
+       */
+      webhook_url: string
     }
     /** HTTPValidationError */
     HTTPValidationError: {
@@ -486,6 +780,15 @@ export interface components {
       /** Minutes */
       minutes?: number | null
     }
+    /** McpInfo */
+    McpInfo: {
+      /** Url */
+      url: string
+      /** Issuer */
+      issuer: string
+      /** Password Required */
+      password_required: boolean
+    }
     /** MetricsOut */
     MetricsOut: {
       /**
@@ -536,6 +839,130 @@ export interface components {
       longest_streak: number
       /** Avg Rating */
       avg_rating: number | null
+    }
+    /** NotificationLogOut */
+    NotificationLogOut: {
+      /** Id */
+      id: number
+      /** Kind */
+      kind: string
+      /**
+       * Date
+       * Format: date
+       */
+      date: string
+      /** Channel */
+      channel: string
+      /** Ok */
+      ok: boolean
+      /** Detail */
+      detail: string
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+    }
+    /** NotificationPrefs */
+    'NotificationPrefs-Input': {
+      /**
+       * @default {
+       *       "enabled": true,
+       *       "time": "08:30"
+       *     }
+       */
+      plan_reminder?: components['schemas']['ReminderPref-Input']
+      /**
+       * @default {
+       *       "enabled": true,
+       *       "time": "14:00"
+       *     }
+       */
+      highlight_nudge?: components['schemas']['ReminderPref-Input']
+      /**
+       * @default {
+       *       "enabled": true,
+       *       "time": "17:30"
+       *     }
+       */
+      review_reminder?: components['schemas']['ReminderPref-Input']
+      /**
+       * Days
+       * @description Weekdays reminders run
+       * @default [
+       *       0,
+       *       1,
+       *       2,
+       *       3,
+       *       4
+       *     ]
+       */
+      days?: number[]
+      /**
+       * @default {
+       *       "webpush": {
+       *         "enabled": false
+       *       },
+       *       "discord": {
+       *         "enabled": false,
+       *         "webhook_url": ""
+       *       }
+       *     }
+       */
+      channels?: components['schemas']['ChannelPrefs-Input']
+    }
+    /** NotificationPrefs */
+    'NotificationPrefs-Output': {
+      /**
+       * @default {
+       *       "enabled": true,
+       *       "time": "08:30"
+       *     }
+       */
+      plan_reminder: components['schemas']['ReminderPref-Output']
+      /**
+       * @default {
+       *       "enabled": true,
+       *       "time": "14:00"
+       *     }
+       */
+      highlight_nudge: components['schemas']['ReminderPref-Output']
+      /**
+       * @default {
+       *       "enabled": true,
+       *       "time": "17:30"
+       *     }
+       */
+      review_reminder: components['schemas']['ReminderPref-Output']
+      /**
+       * Days
+       * @description Weekdays reminders run
+       * @default [
+       *       0,
+       *       1,
+       *       2,
+       *       3,
+       *       4
+       *     ]
+       */
+      days: number[]
+      /**
+       * @default {
+       *       "webpush": {
+       *         "enabled": false
+       *       },
+       *       "discord": {
+       *         "enabled": false,
+       *         "webhook_url": ""
+       *       }
+       *     }
+       */
+      channels: components['schemas']['ChannelPrefs-Output']
+    }
+    /** NotificationTestOut */
+    NotificationTestOut: {
+      /** Deliveries */
+      deliveries: components['schemas']['Delivery'][]
     }
     /** PlannedItemCreate */
     PlannedItemCreate: {
@@ -598,6 +1025,120 @@ export interface components {
       /** Done */
       done?: boolean | null
     }
+    /** Preferences */
+    'Preferences-Input': {
+      /**
+       * Theme
+       * @default system
+       * @enum {string}
+       */
+      theme?: 'system' | 'light' | 'dark'
+      /** Timezone */
+      timezone?: string | null
+      /**
+       * @default {
+       *       "plan_reminder": {
+       *         "enabled": true,
+       *         "time": "08:30"
+       *       },
+       *       "highlight_nudge": {
+       *         "enabled": true,
+       *         "time": "14:00"
+       *       },
+       *       "review_reminder": {
+       *         "enabled": true,
+       *         "time": "17:30"
+       *       },
+       *       "days": [
+       *         0,
+       *         1,
+       *         2,
+       *         3,
+       *         4
+       *       ],
+       *       "channels": {
+       *         "discord": {
+       *           "enabled": false,
+       *           "webhook_url": ""
+       *         },
+       *         "webpush": {
+       *           "enabled": false
+       *         }
+       *       }
+       *     }
+       */
+      notifications?: components['schemas']['NotificationPrefs-Input']
+    }
+    /** Preferences */
+    'Preferences-Output': {
+      /**
+       * Theme
+       * @default system
+       * @enum {string}
+       */
+      theme: 'system' | 'light' | 'dark'
+      /** Timezone */
+      timezone: string | null
+      /**
+       * @default {
+       *       "plan_reminder": {
+       *         "enabled": true,
+       *         "time": "08:30"
+       *       },
+       *       "highlight_nudge": {
+       *         "enabled": true,
+       *         "time": "14:00"
+       *       },
+       *       "review_reminder": {
+       *         "enabled": true,
+       *         "time": "17:30"
+       *       },
+       *       "days": [
+       *         0,
+       *         1,
+       *         2,
+       *         3,
+       *         4
+       *       ],
+       *       "channels": {
+       *         "discord": {
+       *           "enabled": false,
+       *           "webhook_url": ""
+       *         },
+       *         "webpush": {
+       *           "enabled": false
+       *         }
+       *       }
+       *     }
+       */
+      notifications: components['schemas']['NotificationPrefs-Output']
+    }
+    /** ReminderPref */
+    'ReminderPref-Input': {
+      /**
+       * Enabled
+       * @default true
+       */
+      enabled?: boolean
+      /**
+       * Time
+       * @example 08:30
+       */
+      time: string
+    }
+    /** ReminderPref */
+    'ReminderPref-Output': {
+      /**
+       * Enabled
+       * @default true
+       */
+      enabled: boolean
+      /**
+       * Time
+       * @example 08:30
+       */
+      time: string
+    }
     /** ReorderRequest */
     ReorderRequest: {
       /** Ids */
@@ -615,6 +1156,47 @@ export interface components {
       input?: unknown
       /** Context */
       ctx?: Record<string, never>
+    }
+    /** WebPushConfig */
+    WebPushConfig: {
+      /** Public Key */
+      public_key: string
+      /** Subscriptions */
+      subscriptions: number
+    }
+    /** WebPushKeys */
+    WebPushKeys: {
+      /** P256Dh */
+      p256dh: string
+      /** Auth */
+      auth: string
+    }
+    /** WebPushPref */
+    'WebPushPref-Input': {
+      /**
+       * Enabled
+       * @default false
+       */
+      enabled?: boolean
+    }
+    /** WebPushPref */
+    'WebPushPref-Output': {
+      /**
+       * Enabled
+       * @default false
+       */
+      enabled: boolean
+    }
+    /** WebPushSubscriptionIn */
+    WebPushSubscriptionIn: {
+      /** Endpoint */
+      endpoint: string
+      keys: components['schemas']['WebPushKeys']
+    }
+    /** WebPushUnsubscribe */
+    WebPushUnsubscribe: {
+      /** Endpoint */
+      endpoint: string
     }
   }
   responses: never
@@ -1141,6 +1723,283 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_preferences_api_preferences_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Preferences-Output']
+        }
+      }
+    }
+  }
+  put_preferences_api_preferences_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Preferences-Input']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Preferences-Output']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_channels_api_notifications_channels_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ChannelInfo'][]
+        }
+      }
+    }
+  }
+  send_test_api_notifications_test_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NotificationTestOut']
+        }
+      }
+    }
+  }
+  notification_log_api_notifications_log_get: {
+    parameters: {
+      query?: {
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NotificationLogOut'][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  webpush_config_api_notifications_webpush_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WebPushConfig']
+        }
+      }
+    }
+  }
+  subscribe_api_notifications_webpush_subscriptions_post: {
+    parameters: {
+      query?: never
+      header?: {
+        'user-agent'?: string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WebPushSubscriptionIn']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  unsubscribe_api_notifications_webpush_unsubscribe_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WebPushUnsubscribe']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_agents_api_agents_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AgentOut'][]
+        }
+      }
+    }
+  }
+  disconnect_agent_api_agents__client_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        client_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  mcp_info_api_agents_mcp_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['McpInfo']
         }
       }
     }

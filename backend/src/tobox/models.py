@@ -13,7 +13,7 @@ time so history stays accurate if an initiative is later re-classified.
 import enum
 from datetime import UTC, date, datetime
 
-from sqlalchemy import CheckConstraint, Date, DateTime, Dialect, ForeignKey, String, Text
+from sqlalchemy import CheckConstraint, Date, DateTime, Dialect, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator
 
@@ -126,3 +126,89 @@ class LogEntry(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
     initiative: Mapped[Initiative] = relationship(lazy="joined")
+
+
+class AppState(Base):
+    """Small key/value store: user preferences (JSON) and generated secrets such as VAPID keys."""
+
+    __tablename__ = "app_state"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    value: Mapped[str] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, onupdate=utcnow)
+
+
+class PushSubscription(Base):
+    """A browser's Web Push subscription (one per device/browser profile)."""
+
+    __tablename__ = "push_subscriptions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    endpoint: Mapped[str] = mapped_column(Text, unique=True)
+    p256dh: Mapped[str] = mapped_column(String(200))
+    auth: Mapped[str] = mapped_column(String(100))
+    user_agent: Mapped[str] = mapped_column(String(300), default="")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class NotificationLog(Base):
+    """One row per event evaluation and channel delivery; makes scheduled reminders idempotent."""
+
+    __tablename__ = "notification_log"
+    __table_args__ = (Index("ix_notification_log_kind_date", "kind", "date"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(32))
+    date: Mapped[date] = mapped_column(Date)
+    channel: Mapped[str] = mapped_column(String(32))  # "-" when the event was skipped
+    ok: Mapped[bool]
+    detail: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class OAuthClient(Base):
+    """A dynamically registered OAuth client (an AI agent / MCP client)."""
+
+    __tablename__ = "oauth_clients"
+
+    client_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    info: Mapped[str] = mapped_column(Text)  # OAuthClientInformationFull as JSON
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class OAuthGrant(Base):
+    """Short-lived authorization state: a pending consent request or an issued auth code.
+
+    `key` is a random id for pending requests and the SHA-256 of the code for issued codes.
+    """
+
+    __tablename__ = "oauth_grants"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(16))  # "pending" | "code"
+    client_id: Mapped[str] = mapped_column(
+        ForeignKey("oauth_clients.client_id", ondelete="CASCADE"), index=True
+    )
+    data: Mapped[str] = mapped_column(Text)  # JSON
+    expires_at: Mapped[datetime] = mapped_column(UTCDateTime())
+
+
+class OAuthToken(Base):
+    """An issued access or refresh token, stored only as a SHA-256 hash.
+
+    Tokens from one authorization share a `family`, so revoking any of them revokes all.
+    """
+
+    __tablename__ = "oauth_tokens"
+
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(16))  # "access" | "refresh"
+    family: Mapped[str] = mapped_column(String(32), index=True)
+    client_id: Mapped[str] = mapped_column(
+        ForeignKey("oauth_clients.client_id", ondelete="CASCADE"), index=True
+    )
+    scopes: Mapped[str] = mapped_column(String(200))  # space-separated
+    resource: Mapped[str | None] = mapped_column(String(300), default=None)
+    expires_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), default=None)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), default=None)

@@ -1,20 +1,48 @@
+import asyncio
+from collections.abc import AsyncIterator, Callable
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse
+from sqlalchemy.orm import Session
 
-from tobox.api import days, initiatives, metrics
+from tobox import agents
+from tobox.api import agents as agents_api
+from tobox.api import days, initiatives, metrics, notifications, preferences
 from tobox.config import Settings, get_settings
+from tobox.db import SessionLocal
 from tobox.errors import DomainError
+from tobox.notify import scheduler
 
 IMMUTABLE = "public, max-age=31536000, immutable"
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None, session_factory: Callable[[], Session] | None = None
+) -> FastAPI:
+    """`session_factory` serves the MCP server and scheduler; REST routes use `get_session`."""
     settings = settings or get_settings()
-    app = FastAPI(title="Tobox", version="0.1.0")
+    sessions = session_factory or SessionLocal
+    background: list[Callable[[], AbstractAsyncContextManager[None]]] = []
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        task = asyncio.create_task(scheduler.run(sessions)) if settings.scheduler_enabled else None
+        try:
+            if background:
+                async with background[0]():
+                    yield
+            else:
+                yield
+        finally:
+            if task:
+                task.cancel()
+
+    app = FastAPI(title="Tobox", version="0.1.0", lifespan=lifespan)
+    app.state.settings = settings
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -36,7 +64,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     api.include_router(initiatives.router)
     api.include_router(days.router)
     api.include_router(metrics.router)
+    api.include_router(preferences.router)
+    api.include_router(notifications.router)
+    api.include_router(agents_api.router)
     app.include_router(api)
+    background.append(agents.mount(app, sessions, settings))
     if settings.static_dir is not None:
         mount_spa(app, settings.static_dir)
     return app

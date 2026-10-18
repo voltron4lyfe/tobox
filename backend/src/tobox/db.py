@@ -1,5 +1,6 @@
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
@@ -11,14 +12,14 @@ class Base(DeclarativeBase):
     pass
 
 
-def make_engine(url: str) -> Engine:
+def make_engine(url: str, **kwargs: Any) -> Engine:
     connect_args: dict[str, object] = {}
     if url.startswith("sqlite"):
         connect_args["check_same_thread"] = False
         db_path = url.removeprefix("sqlite:///")
         if db_path and db_path != ":memory:":
             Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-    engine = create_engine(url, connect_args=connect_args)
+    engine = create_engine(url, connect_args=connect_args, **kwargs)
 
     if url.startswith("sqlite"):
 

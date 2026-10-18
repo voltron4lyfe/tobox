@@ -9,6 +9,7 @@ requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.20.0",
     "fastapi>=0.143.0",
+    "httpx2>=2.13.1",
     "mcp>=2.3.0",
     "pydantic-settings>=2.15.0",
     "pywebpush>=2.5.0",
@@ -23,7 +24,6 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
-    "httpx2>=2.13.1",
     "mypy>=2.4.0",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
@@ -48,6 +48,10 @@ python_version = "3.13"
 packages = ["tobox"]
 mypy_path = "src"
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["py_vapid", "pywebpush"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

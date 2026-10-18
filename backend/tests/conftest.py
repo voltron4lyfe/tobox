@@ -7,6 +7,7 @@ from sqlalchemy import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from tobox.config import Settings
 from tobox.db import Base, get_session, make_engine
 from tobox.main import create_app
 
@@ -16,22 +17,31 @@ NEXT_DAY = "2026-03-03"
 
 @pytest.fixture
 def engine() -> Iterator[Engine]:
-    eng = make_engine("sqlite://")
-    eng.pool = StaticPool(eng.pool._creator)  # share one in-memory connection
+    # One shared in-memory connection, created through make_engine so the same pragmas
+    # (foreign keys, WAL) apply as in production.
+    eng = make_engine("sqlite://", poolclass=StaticPool)
     Base.metadata.create_all(eng)
     yield eng
     eng.dispose()
 
 
 @pytest.fixture
-def client(engine: Engine) -> Iterator[TestClient]:
-    factory = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+def session_factory(engine: Engine) -> sessionmaker[Session]:
+    return sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
+
+@pytest.fixture
+def settings() -> Settings:
+    return Settings(scheduler_enabled=False, owner_password="hunter2")
+
+
+@pytest.fixture
+def client(session_factory: sessionmaker[Session], settings: Settings) -> Iterator[TestClient]:
     def _session() -> Iterator[Session]:
-        with factory() as s:
+        with session_factory() as s:
             yield s
 
-    app = create_app()
+    app = create_app(settings, session_factory=session_factory)
     app.dependency_overrides[get_session] = _session
     with TestClient(app) as c:
         yield c

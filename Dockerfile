@@ -46,4 +46,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"
 
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn tobox.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn tobox.main:app --host 0.0.0.0 --port 8000"]

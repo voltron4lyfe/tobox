@@ -744,10 +744,394 @@
           }
         }
       }
+    },
+    "/api/preferences": {
+      "get": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Get Preferences",
+        "operationId": "get_preferences_api_preferences_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preferences-Output"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Put Preferences",
+        "operationId": "put_preferences_api_preferences_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Preferences-Input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preferences-Output"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/channels": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "List Channels",
+        "operationId": "list_channels_api_notifications_channels_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChannelInfo"
+                  },
+                  "type": "array",
+                  "title": "Response List Channels Api Notifications Channels Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/test": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Send Test",
+        "description": "Send a sample notification through every enabled channel (not recorded in the log).",
+        "operationId": "send_test_api_notifications_test_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationTestOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/log": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Notification Log",
+        "operationId": "notification_log_api_notifications_log_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationLogOut"
+                  },
+                  "title": "Response Notification Log Api Notifications Log Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/webpush": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Webpush Config",
+        "operationId": "webpush_config_api_notifications_webpush_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebPushConfig"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/webpush/subscriptions": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Subscribe",
+        "operationId": "subscribe_api_notifications_webpush_subscriptions_post",
+        "parameters": [
+          {
+            "name": "user-agent",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "User-Agent"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebPushSubscriptionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/webpush/unsubscribe": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Unsubscribe",
+        "operationId": "unsubscribe_api_notifications_webpush_unsubscribe_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebPushUnsubscribe"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agents": {
+      "get": {
+        "tags": [
+          "agents"
+        ],
+        "summary": "List Agents",
+        "description": "AI agents currently holding a valid token.",
+        "operationId": "list_agents_api_agents_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AgentOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Agents Api Agents Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agents/{client_id}": {
+      "delete": {
+        "tags": [
+          "agents"
+        ],
+        "summary": "Disconnect Agent",
+        "description": "Revoke every token of an agent and forget its registration.",
+        "operationId": "disconnect_agent_api_agents__client_id__delete",
+        "parameters": [
+          {
+            "name": "client_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Client Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agents/mcp": {
+      "get": {
+        "tags": [
+          "agents"
+        ],
+        "summary": "Mcp Info",
+        "description": "Where agents connect, and whether approving them needs the owner password.",
+        "operationId": "mcp_info_api_agents_mcp_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpInfo"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AgentOut": {
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "title": "Client Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Scopes"
+          },
+          "connected_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Connected At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_id",
+          "name",
+          "scopes",
+          "connected_at",
+          "last_used_at"
+        ],
+        "title": "AgentOut"
+      },
       "CarryForwardRequest": {
         "properties": {
           "to_date": {
@@ -776,6 +1160,85 @@
           "to_date"
         ],
         "title": "CarryForwardRequest"
+      },
+      "ChannelInfo": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready",
+            "description": "Configured well enough to deliver (e.g. has a device)."
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "label",
+          "enabled",
+          "ready",
+          "detail"
+        ],
+        "title": "ChannelInfo"
+      },
+      "ChannelPrefs-Input": {
+        "properties": {
+          "webpush": {
+            "$ref": "#/components/schemas/WebPushPref-Input",
+            "default": {
+              "enabled": false
+            }
+          },
+          "discord": {
+            "$ref": "#/components/schemas/DiscordPref-Input",
+            "default": {
+              "enabled": false,
+              "webhook_url": ""
+            }
+          }
+        },
+        "type": "object",
+        "title": "ChannelPrefs",
+        "description": "One entry per delivery channel. Add a field here when adding a channel to `notify`."
+      },
+      "ChannelPrefs-Output": {
+        "properties": {
+          "webpush": {
+            "$ref": "#/components/schemas/WebPushPref-Output",
+            "default": {
+              "enabled": false
+            }
+          },
+          "discord": {
+            "$ref": "#/components/schemas/DiscordPref-Output",
+            "default": {
+              "enabled": false,
+              "webhook_url": ""
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "webpush",
+          "discord"
+        ],
+        "title": "ChannelPrefs",
+        "description": "One entry per delivery channel. Add a field here when adding a channel to `notify`."
       },
       "DayMetrics": {
         "properties": {
@@ -1115,6 +1578,68 @@
         },
         "type": "object",
         "title": "DayUpdate"
+      },
+      "Delivery": {
+        "properties": {
+          "channel": {
+            "type": "string",
+            "title": "Channel"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "channel",
+          "ok",
+          "detail"
+        ],
+        "title": "Delivery"
+      },
+      "DiscordPref-Input": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          },
+          "webhook_url": {
+            "type": "string",
+            "pattern": "^(|https://(discord\\.com|discordapp\\.com)/api/webhooks/\\S+)$",
+            "title": "Webhook Url",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "DiscordPref"
+      },
+      "DiscordPref-Output": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          },
+          "webhook_url": {
+            "type": "string",
+            "pattern": "^(|https://(discord\\.com|discordapp\\.com)/api/webhooks/\\S+)$",
+            "title": "Webhook Url",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled",
+          "webhook_url"
+        ],
+        "title": "DiscordPref"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1526,6 +2051,29 @@
         "type": "object",
         "title": "LogEntryUpdate"
       },
+      "McpInfo": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "issuer": {
+            "type": "string",
+            "title": "Issuer"
+          },
+          "password_required": {
+            "type": "boolean",
+            "title": "Password Required"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "issuer",
+          "password_required"
+        ],
+        "title": "McpInfo"
+      },
       "MetricsOut": {
         "properties": {
           "start": {
@@ -1651,6 +2199,188 @@
           "avg_rating"
         ],
         "title": "MetricsSummary"
+      },
+      "NotificationLogOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "date",
+          "channel",
+          "ok",
+          "detail",
+          "created_at"
+        ],
+        "title": "NotificationLogOut"
+      },
+      "NotificationPrefs-Input": {
+        "properties": {
+          "plan_reminder": {
+            "$ref": "#/components/schemas/ReminderPref-Input",
+            "default": {
+              "enabled": true,
+              "time": "08:30"
+            }
+          },
+          "highlight_nudge": {
+            "$ref": "#/components/schemas/ReminderPref-Input",
+            "default": {
+              "enabled": true,
+              "time": "14:00"
+            }
+          },
+          "review_reminder": {
+            "$ref": "#/components/schemas/ReminderPref-Input",
+            "default": {
+              "enabled": true,
+              "time": "17:30"
+            }
+          },
+          "days": {
+            "items": {
+              "type": "integer",
+              "maximum": 6.0,
+              "minimum": 0.0,
+              "description": "0 = Monday \u2026 6 = Sunday"
+            },
+            "type": "array",
+            "title": "Days",
+            "description": "Weekdays reminders run",
+            "default": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "channels": {
+            "$ref": "#/components/schemas/ChannelPrefs-Input",
+            "default": {
+              "webpush": {
+                "enabled": false
+              },
+              "discord": {
+                "enabled": false,
+                "webhook_url": ""
+              }
+            }
+          }
+        },
+        "type": "object",
+        "title": "NotificationPrefs"
+      },
+      "NotificationPrefs-Output": {
+        "properties": {
+          "plan_reminder": {
+            "$ref": "#/components/schemas/ReminderPref-Output",
+            "default": {
+              "enabled": true,
+              "time": "08:30"
+            }
+          },
+          "highlight_nudge": {
+            "$ref": "#/components/schemas/ReminderPref-Output",
+            "default": {
+              "enabled": true,
+              "time": "14:00"
+            }
+          },
+          "review_reminder": {
+            "$ref": "#/components/schemas/ReminderPref-Output",
+            "default": {
+              "enabled": true,
+              "time": "17:30"
+            }
+          },
+          "days": {
+            "items": {
+              "type": "integer",
+              "maximum": 6.0,
+              "minimum": 0.0,
+              "description": "0 = Monday \u2026 6 = Sunday"
+            },
+            "type": "array",
+            "title": "Days",
+            "description": "Weekdays reminders run",
+            "default": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "channels": {
+            "$ref": "#/components/schemas/ChannelPrefs-Output",
+            "default": {
+              "webpush": {
+                "enabled": false
+              },
+              "discord": {
+                "enabled": false,
+                "webhook_url": ""
+              }
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan_reminder",
+          "highlight_nudge",
+          "review_reminder",
+          "days",
+          "channels"
+        ],
+        "title": "NotificationPrefs"
+      },
+      "NotificationTestOut": {
+        "properties": {
+          "deliveries": {
+            "items": {
+              "$ref": "#/components/schemas/Delivery"
+            },
+            "type": "array",
+            "title": "Deliveries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "deliveries"
+        ],
+        "title": "NotificationTestOut"
       },
       "PlannedItemCreate": {
         "properties": {
@@ -1818,6 +2548,176 @@
         "type": "object",
         "title": "PlannedItemUpdate"
       },
+      "Preferences-Input": {
+        "properties": {
+          "theme": {
+            "type": "string",
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ],
+            "title": "Theme",
+            "default": "system"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "notifications": {
+            "$ref": "#/components/schemas/NotificationPrefs-Input",
+            "default": {
+              "plan_reminder": {
+                "enabled": true,
+                "time": "08:30"
+              },
+              "highlight_nudge": {
+                "enabled": true,
+                "time": "14:00"
+              },
+              "review_reminder": {
+                "enabled": true,
+                "time": "17:30"
+              },
+              "days": [
+                0,
+                1,
+                2,
+                3,
+                4
+              ],
+              "channels": {
+                "discord": {
+                  "enabled": false,
+                  "webhook_url": ""
+                },
+                "webpush": {
+                  "enabled": false
+                }
+              }
+            }
+          }
+        },
+        "type": "object",
+        "title": "Preferences"
+      },
+      "Preferences-Output": {
+        "properties": {
+          "theme": {
+            "type": "string",
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ],
+            "title": "Theme",
+            "default": "system"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "notifications": {
+            "$ref": "#/components/schemas/NotificationPrefs-Output",
+            "default": {
+              "plan_reminder": {
+                "enabled": true,
+                "time": "08:30"
+              },
+              "highlight_nudge": {
+                "enabled": true,
+                "time": "14:00"
+              },
+              "review_reminder": {
+                "enabled": true,
+                "time": "17:30"
+              },
+              "days": [
+                0,
+                1,
+                2,
+                3,
+                4
+              ],
+              "channels": {
+                "discord": {
+                  "enabled": false,
+                  "webhook_url": ""
+                },
+                "webpush": {
+                  "enabled": false
+                }
+              }
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "theme",
+          "timezone",
+          "notifications"
+        ],
+        "title": "Preferences"
+      },
+      "ReminderPref-Input": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "title": "Time",
+            "examples": [
+              "08:30"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "time"
+        ],
+        "title": "ReminderPref"
+      },
+      "ReminderPref-Output": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "title": "Time",
+            "examples": [
+              "08:30"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled",
+          "time"
+        ],
+        "title": "ReminderPref"
+      },
       "ReorderRequest": {
         "properties": {
           "ids": {
@@ -1873,6 +2773,98 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WebPushConfig": {
+        "properties": {
+          "public_key": {
+            "type": "string",
+            "title": "Public Key"
+          },
+          "subscriptions": {
+            "type": "integer",
+            "title": "Subscriptions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "public_key",
+          "subscriptions"
+        ],
+        "title": "WebPushConfig"
+      },
+      "WebPushKeys": {
+        "properties": {
+          "p256dh": {
+            "type": "string",
+            "title": "P256Dh"
+          },
+          "auth": {
+            "type": "string",
+            "title": "Auth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "p256dh",
+          "auth"
+        ],
+        "title": "WebPushKeys"
+      },
+      "WebPushPref-Input": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "WebPushPref"
+      },
+      "WebPushPref-Output": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "WebPushPref"
+      },
+      "WebPushSubscriptionIn": {
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "pattern": "^https://",
+            "title": "Endpoint"
+          },
+          "keys": {
+            "$ref": "#/components/schemas/WebPushKeys"
+          }
+        },
+        "type": "object",
+        "required": [
+          "endpoint",
+          "keys"
+        ],
+        "title": "WebPushSubscriptionIn"
+      },
+      "WebPushUnsubscribe": {
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "title": "Endpoint"
+          }
+        },
+        "type": "object",
+        "required": [
+          "endpoint"
+        ],
+        "title": "WebPushUnsubscribe"
       }
     }
   }

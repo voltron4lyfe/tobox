@@ -215,3 +215,123 @@ class MetricsOut(BaseModel):
     summary: MetricsSummary
     days: list[DayMetrics]
     initiatives: list[InitiativeMetrics]
+
+
+# --- Preferences -------------------------------------------------------------------
+
+
+class Defaulted(BaseModel):
+    """Responses always include defaulted fields, so generated TS types mark them required."""
+
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
+
+
+Theme = Literal["system", "light", "dark"]
+ClockTime = Annotated[str, Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$", examples=["08:30"])]
+Weekday = Annotated[int, Field(ge=0, le=6, description="0 = Monday … 6 = Sunday")]
+EventKind = Literal["plan_reminder", "highlight_nudge", "review_reminder"]
+
+
+class ReminderPref(Defaulted):
+    enabled: bool = True
+    time: ClockTime
+
+
+class WebPushPref(Defaulted):
+    enabled: bool = False
+
+
+class DiscordPref(Defaulted):
+    enabled: bool = False
+    webhook_url: Annotated[
+        str, Field(pattern=r"^(|https://(discord\.com|discordapp\.com)/api/webhooks/\S+)$")
+    ] = ""
+
+
+class ChannelPrefs(Defaulted):
+    """One entry per delivery channel. Add a field here when adding a channel to `notify`."""
+
+    webpush: WebPushPref = WebPushPref()
+    discord: DiscordPref = DiscordPref()
+
+
+class NotificationPrefs(Defaulted):
+    plan_reminder: ReminderPref = ReminderPref(time="08:30")
+    highlight_nudge: ReminderPref = ReminderPref(time="14:00")
+    review_reminder: ReminderPref = ReminderPref(time="17:30")
+    days: list[Weekday] = Field(default=[0, 1, 2, 3, 4], description="Weekdays reminders run")
+    channels: ChannelPrefs = ChannelPrefs()
+
+
+class Preferences(Defaulted):
+    theme: Theme = "system"
+    # IANA zone for "today" and reminder times; None until the browser reports one.
+    timezone: str | None = None
+    notifications: NotificationPrefs = NotificationPrefs()
+
+
+# --- Notifications -----------------------------------------------------------------
+
+
+class Delivery(Defaulted):
+    channel: str
+    ok: bool
+    detail: str = ""
+
+
+class NotificationTestOut(BaseModel):
+    deliveries: list[Delivery]
+
+
+class ChannelInfo(Defaulted):
+    name: str
+    label: str
+    enabled: bool
+    ready: bool = Field(description="Configured well enough to deliver (e.g. has a device).")
+    detail: str = ""
+
+
+class NotificationLogOut(ORMModel):
+    id: int
+    kind: str
+    date: date
+    channel: str
+    ok: bool
+    detail: str
+    created_at: datetime
+
+
+class WebPushKeys(BaseModel):
+    p256dh: str
+    auth: str
+
+
+class WebPushSubscriptionIn(BaseModel):
+    endpoint: Annotated[str, Field(pattern=r"^https://")]
+    keys: WebPushKeys
+
+
+class WebPushUnsubscribe(BaseModel):
+    endpoint: str
+
+
+class WebPushConfig(BaseModel):
+    public_key: str
+    subscriptions: int
+
+
+# --- AI agents (MCP OAuth clients) ---------------------------------------------------
+
+
+class AgentOut(BaseModel):
+    client_id: str
+    name: str
+    scopes: list[str]
+    connected_at: datetime
+    last_used_at: datetime | None
+
+
+class McpInfo(BaseModel):
+    url: str
+    issuer: str
+    password_required: bool
