@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Fast pre-commit gate: lint + typecheck + unit tests. Skip once with `git commit --no-verify`.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+make --no-print-directory check

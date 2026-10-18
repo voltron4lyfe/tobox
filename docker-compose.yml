@@ -1,0 +1,20 @@
+services:
+  api:
+    build: ./backend
+    restart: unless-stopped
+    volumes:
+      - tobox-data:/data
+    environment:
+      TOBOX_CORS_ORIGINS: '[]'
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${TOBOX_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  tobox-data:

@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "unicorn", "oxc", "import", "jsx-a11y", "vitest"],
+  "categories": { "correctness": "error", "suspicious": "warn" },
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    // Side-effect imports (CSS, test setup) are fine.
+    "import/no-unassigned-import": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    // Keyboard-first app: inline editors and dialogs intentionally take focus.
+    "jsx-a11y/no-autofocus": "off",
+    // We build ARIA combobox/listbox/radio/checkbox widgets on purpose.
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "jsx-a11y/no-noninteractive-element-to-interactive-role": "off",
+    // List rows are mouse-selectable; keyboard selection is provided globally via j/k.
+    "jsx-a11y/click-events-have-key-events": "off",
+    "jsx-a11y/no-noninteractive-element-interactions": "off"
+  },
+  "ignorePatterns": ["dist", "src/api/schema.d.ts"]
+}

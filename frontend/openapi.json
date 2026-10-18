@@ -1,0 +1,1859 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tobox",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Api Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/initiatives": {
+      "get": {
+        "tags": [
+          "initiatives"
+        ],
+        "summary": "List Initiatives",
+        "operationId": "list_initiatives_api_initiatives_get",
+        "parameters": [
+          {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Archived"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InitiativeOut"
+                  },
+                  "title": "Response List Initiatives Api Initiatives Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "initiatives"
+        ],
+        "summary": "Create Initiative",
+        "operationId": "create_initiative_api_initiatives_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InitiativeCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitiativeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/initiatives/{initiative_id}": {
+      "patch": {
+        "tags": [
+          "initiatives"
+        ],
+        "summary": "Update Initiative",
+        "operationId": "update_initiative_api_initiatives__initiative_id__patch",
+        "parameters": [
+          {
+            "name": "initiative_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Initiative Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InitiativeUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitiativeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "initiatives"
+        ],
+        "summary": "Delete Initiative",
+        "operationId": "delete_initiative_api_initiatives__initiative_id__delete",
+        "parameters": [
+          {
+            "name": "initiative_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Initiative Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/days/{day}": {
+      "get": {
+        "tags": [
+          "days"
+        ],
+        "summary": "Get Day",
+        "operationId": "get_day_api_days__day__get",
+        "parameters": [
+          {
+            "name": "day",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Day"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "days"
+        ],
+        "summary": "Update Day",
+        "operationId": "update_day_api_days__day__put",
+        "parameters": [
+          {
+            "name": "day",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Day"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/days/{day}/items": {
+      "post": {
+        "tags": [
+          "days"
+        ],
+        "summary": "Add Item",
+        "operationId": "add_item_api_days__day__items_post",
+        "parameters": [
+          {
+            "name": "day",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Day"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlannedItemCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/items/{item_id}": {
+      "patch": {
+        "tags": [
+          "days"
+        ],
+        "summary": "Update Item",
+        "operationId": "update_item_api_items__item_id__patch",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlannedItemUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "days"
+        ],
+        "summary": "Delete Item",
+        "operationId": "delete_item_api_items__item_id__delete",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/days/{day}/items/reorder": {
+      "post": {
+        "tags": [
+          "days"
+        ],
+        "summary": "Reorder Items",
+        "operationId": "reorder_items_api_days__day__items_reorder_post",
+        "parameters": [
+          {
+            "name": "day",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Day"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/days/{day}/carry-forward": {
+      "post": {
+        "tags": [
+          "days"
+        ],
+        "summary": "Carry Forward",
+        "description": "Copy the day's unfinished items onto another day (skipping ones already carried).",
+        "operationId": "carry_forward_api_days__day__carry_forward_post",
+        "parameters": [
+          {
+            "name": "day",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Day"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CarryForwardRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/days/{day}/logs": {
+      "post": {
+        "tags": [
+          "days"
+        ],
+        "summary": "Add Log",
+        "operationId": "add_log_api_days__day__logs_post",
+        "parameters": [
+          {
+            "name": "day",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Day"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogEntryCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/logs/{log_id}": {
+      "patch": {
+        "tags": [
+          "days"
+        ],
+        "summary": "Update Log",
+        "operationId": "update_log_api_logs__log_id__patch",
+        "parameters": [
+          {
+            "name": "log_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Log Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogEntryUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "days"
+        ],
+        "summary": "Delete Log",
+        "operationId": "delete_log_api_logs__log_id__delete",
+        "parameters": [
+          {
+            "name": "log_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Log Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/metrics": {
+      "get": {
+        "tags": [
+          "metrics"
+        ],
+        "summary": "Get Metrics",
+        "operationId": "get_metrics_api_metrics_get",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CarryForwardRequest": {
+        "properties": {
+          "to_date": {
+            "type": "string",
+            "format": "date",
+            "title": "To Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "to_date"
+        ],
+        "title": "CarryForwardRequest"
+      },
+      "DayMetrics": {
+        "properties": {
+          "planned_minutes": {
+            "type": "integer",
+            "title": "Planned Minutes"
+          },
+          "actual_minutes": {
+            "type": "integer",
+            "title": "Actual Minutes"
+          },
+          "planned_by_quadrant": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Planned By Quadrant"
+          },
+          "actual_by_quadrant": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Actual By Quadrant"
+          },
+          "important_share": {
+            "type": "number",
+            "title": "Important Share"
+          },
+          "q2_share": {
+            "type": "number",
+            "title": "Q2 Share"
+          },
+          "plan_adherence": {
+            "type": "number",
+            "title": "Plan Adherence"
+          },
+          "unplanned_minutes": {
+            "type": "integer",
+            "title": "Unplanned Minutes"
+          },
+          "items_planned": {
+            "type": "integer",
+            "title": "Items Planned"
+          },
+          "items_done": {
+            "type": "integer",
+            "title": "Items Done"
+          },
+          "highlight": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HighlightStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "done",
+              "worked",
+              "missed",
+              "unplanned",
+              "idle"
+            ],
+            "title": "Verdict"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          }
+        },
+        "type": "object",
+        "required": [
+          "planned_minutes",
+          "actual_minutes",
+          "planned_by_quadrant",
+          "actual_by_quadrant",
+          "important_share",
+          "q2_share",
+          "plan_adherence",
+          "unplanned_minutes",
+          "items_planned",
+          "items_done",
+          "highlight",
+          "verdict",
+          "date",
+          "rating"
+        ],
+        "title": "DayMetrics"
+      },
+      "DayOut": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "intention": {
+            "type": "string",
+            "title": "Intention"
+          },
+          "planned_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned At"
+          },
+          "reflection": {
+            "type": "string",
+            "title": "Reflection"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PlannedItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "logs": {
+            "items": {
+              "$ref": "#/components/schemas/LogEntryOut"
+            },
+            "type": "array",
+            "title": "Logs"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/DaySummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "intention",
+          "planned_at",
+          "reflection",
+          "rating",
+          "reviewed_at",
+          "items",
+          "logs",
+          "summary"
+        ],
+        "title": "DayOut"
+      },
+      "DaySummary": {
+        "properties": {
+          "planned_minutes": {
+            "type": "integer",
+            "title": "Planned Minutes"
+          },
+          "actual_minutes": {
+            "type": "integer",
+            "title": "Actual Minutes"
+          },
+          "planned_by_quadrant": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Planned By Quadrant"
+          },
+          "actual_by_quadrant": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Actual By Quadrant"
+          },
+          "important_share": {
+            "type": "number",
+            "title": "Important Share"
+          },
+          "q2_share": {
+            "type": "number",
+            "title": "Q2 Share"
+          },
+          "plan_adherence": {
+            "type": "number",
+            "title": "Plan Adherence"
+          },
+          "unplanned_minutes": {
+            "type": "integer",
+            "title": "Unplanned Minutes"
+          },
+          "items_planned": {
+            "type": "integer",
+            "title": "Items Planned"
+          },
+          "items_done": {
+            "type": "integer",
+            "title": "Items Done"
+          },
+          "highlight": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HighlightStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "done",
+              "worked",
+              "missed",
+              "unplanned",
+              "idle"
+            ],
+            "title": "Verdict"
+          }
+        },
+        "type": "object",
+        "required": [
+          "planned_minutes",
+          "actual_minutes",
+          "planned_by_quadrant",
+          "actual_by_quadrant",
+          "important_share",
+          "q2_share",
+          "plan_adherence",
+          "unplanned_minutes",
+          "items_planned",
+          "items_done",
+          "highlight",
+          "verdict"
+        ],
+        "title": "DaySummary"
+      },
+      "DayUpdate": {
+        "properties": {
+          "intention": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intention"
+          },
+          "reflection": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reflection"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "planned": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned",
+            "description": "Mark the morning plan committed."
+          },
+          "reviewed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed",
+            "description": "Mark the evening review complete."
+          }
+        },
+        "type": "object",
+        "title": "DayUpdate"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HighlightStatus": {
+        "properties": {
+          "item_id": {
+            "type": "integer",
+            "title": "Item Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "initiative_id": {
+            "type": "integer",
+            "title": "Initiative Id"
+          },
+          "quadrant": {
+            "type": "integer",
+            "title": "Quadrant"
+          },
+          "logged_minutes": {
+            "type": "integer",
+            "title": "Logged Minutes"
+          },
+          "done": {
+            "type": "boolean",
+            "title": "Done"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "title",
+          "initiative_id",
+          "quadrant",
+          "logged_minutes",
+          "done"
+        ],
+        "title": "HighlightStatus"
+      },
+      "InitiativeCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "quadrant": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "Quadrant"
+          },
+          "status": {
+            "$ref": "#/components/schemas/InitiativeStatus",
+            "default": "active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "quadrant"
+        ],
+        "title": "InitiativeCreate"
+      },
+      "InitiativeMetrics": {
+        "properties": {
+          "initiative_id": {
+            "type": "integer",
+            "title": "Initiative Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "quadrant": {
+            "type": "integer",
+            "title": "Quadrant"
+          },
+          "status": {
+            "$ref": "#/components/schemas/InitiativeStatus"
+          },
+          "actual_minutes": {
+            "type": "integer",
+            "title": "Actual Minutes"
+          },
+          "planned_minutes": {
+            "type": "integer",
+            "title": "Planned Minutes"
+          },
+          "days_worked": {
+            "type": "integer",
+            "title": "Days Worked"
+          },
+          "highlight_days": {
+            "type": "integer",
+            "title": "Highlight Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "initiative_id",
+          "title",
+          "quadrant",
+          "status",
+          "actual_minutes",
+          "planned_minutes",
+          "days_worked",
+          "highlight_days"
+        ],
+        "title": "InitiativeMetrics"
+      },
+      "InitiativeOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "quadrant": {
+            "type": "integer",
+            "title": "Quadrant"
+          },
+          "status": {
+            "$ref": "#/components/schemas/InitiativeStatus"
+          },
+          "sort_order": {
+            "type": "integer",
+            "title": "Sort Order"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "quadrant",
+          "status",
+          "sort_order",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "InitiativeOut"
+      },
+      "InitiativeStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "paused",
+          "done",
+          "archived"
+        ],
+        "title": "InitiativeStatus"
+      },
+      "InitiativeUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "quadrant": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 4.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quadrant"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InitiativeStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sort_order": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort Order"
+          }
+        },
+        "type": "object",
+        "title": "InitiativeUpdate"
+      },
+      "LogEntryCreate": {
+        "properties": {
+          "initiative_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Initiative Id"
+          },
+          "planned_item_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Item Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Title",
+            "default": ""
+          },
+          "minutes": {
+            "type": "integer",
+            "maximum": 1440.0,
+            "minimum": 0.0,
+            "title": "Minutes",
+            "default": 30
+          },
+          "mark_done": {
+            "type": "boolean",
+            "title": "Mark Done",
+            "description": "Also mark the linked planned item done.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "LogEntryCreate",
+        "description": "Either initiative_id or planned_item_id is required."
+      },
+      "LogEntryOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "initiative_id": {
+            "type": "integer",
+            "title": "Initiative Id"
+          },
+          "planned_item_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Item Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "quadrant": {
+            "type": "integer",
+            "title": "Quadrant"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "date",
+          "initiative_id",
+          "planned_item_id",
+          "title",
+          "quadrant",
+          "minutes",
+          "created_at"
+        ],
+        "title": "LogEntryOut"
+      },
+      "LogEntryUpdate": {
+        "properties": {
+          "initiative_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Initiative Id"
+          },
+          "planned_item_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Item Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1440.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes"
+          }
+        },
+        "type": "object",
+        "title": "LogEntryUpdate"
+      },
+      "MetricsOut": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/MetricsSummary"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/DayMetrics"
+            },
+            "type": "array",
+            "title": "Days"
+          },
+          "initiatives": {
+            "items": {
+              "$ref": "#/components/schemas/InitiativeMetrics"
+            },
+            "type": "array",
+            "title": "Initiatives"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "summary",
+          "days",
+          "initiatives"
+        ],
+        "title": "MetricsOut"
+      },
+      "MetricsSummary": {
+        "properties": {
+          "days_tracked": {
+            "type": "integer",
+            "title": "Days Tracked"
+          },
+          "total_minutes": {
+            "type": "integer",
+            "title": "Total Minutes"
+          },
+          "actual_by_quadrant": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Actual By Quadrant"
+          },
+          "planned_by_quadrant": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Planned By Quadrant"
+          },
+          "important_share": {
+            "type": "number",
+            "title": "Important Share"
+          },
+          "q2_share": {
+            "type": "number",
+            "title": "Q2 Share"
+          },
+          "avg_plan_adherence": {
+            "type": "number",
+            "title": "Avg Plan Adherence"
+          },
+          "highlight_days": {
+            "type": "integer",
+            "title": "Highlight Days"
+          },
+          "highlight_hit_rate": {
+            "type": "number",
+            "title": "Highlight Hit Rate"
+          },
+          "current_streak": {
+            "type": "integer",
+            "title": "Current Streak"
+          },
+          "longest_streak": {
+            "type": "integer",
+            "title": "Longest Streak"
+          },
+          "avg_rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Rating"
+          }
+        },
+        "type": "object",
+        "required": [
+          "days_tracked",
+          "total_minutes",
+          "actual_by_quadrant",
+          "planned_by_quadrant",
+          "important_share",
+          "q2_share",
+          "avg_plan_adherence",
+          "highlight_days",
+          "highlight_hit_rate",
+          "current_streak",
+          "longest_streak",
+          "avg_rating"
+        ],
+        "title": "MetricsSummary"
+      },
+      "PlannedItemCreate": {
+        "properties": {
+          "initiative_id": {
+            "type": "integer",
+            "title": "Initiative Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Title",
+            "default": ""
+          },
+          "estimate_minutes": {
+            "type": "integer",
+            "maximum": 1440.0,
+            "minimum": 0.0,
+            "title": "Estimate Minutes",
+            "default": 30
+          },
+          "is_highlight": {
+            "type": "boolean",
+            "title": "Is Highlight",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "initiative_id"
+        ],
+        "title": "PlannedItemCreate"
+      },
+      "PlannedItemOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "initiative_id": {
+            "type": "integer",
+            "title": "Initiative Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "quadrant": {
+            "type": "integer",
+            "title": "Quadrant"
+          },
+          "estimate_minutes": {
+            "type": "integer",
+            "title": "Estimate Minutes"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "is_highlight": {
+            "type": "boolean",
+            "title": "Is Highlight"
+          },
+          "done": {
+            "type": "boolean",
+            "title": "Done"
+          },
+          "carried_from_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carried From Id"
+          },
+          "logged_minutes": {
+            "type": "integer",
+            "title": "Logged Minutes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "date",
+          "initiative_id",
+          "title",
+          "quadrant",
+          "estimate_minutes",
+          "rank",
+          "is_highlight",
+          "done",
+          "carried_from_id",
+          "logged_minutes"
+        ],
+        "title": "PlannedItemOut"
+      },
+      "PlannedItemUpdate": {
+        "properties": {
+          "initiative_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Initiative Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "estimate_minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1440.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimate Minutes"
+          },
+          "is_highlight": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Highlight"
+          },
+          "done": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Done"
+          }
+        },
+        "type": "object",
+        "title": "PlannedItemUpdate"
+      },
+      "ReorderRequest": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ids"
+        ],
+        "title": "ReorderRequest"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
