@@ -1,12 +1,13 @@
 from pathlib import Path
 
-from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from tobox.api import days, initiatives, metrics
 from tobox.config import Settings, get_settings
+from tobox.errors import DomainError
 
 IMMUTABLE = "public, max-age=31536000, immutable"
 
@@ -21,6 +22,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["*"],
     )
     app.add_middleware(GZipMiddleware, minimum_size=1024)
+
+    @app.exception_handler(DomainError)
+    async def domain_error(_: Request, exc: DomainError) -> JSONResponse:
+        return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
     api = APIRouter(prefix="/api")
 
     @api.get("/health", tags=["meta"])
