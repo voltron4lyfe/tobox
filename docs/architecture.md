@@ -23,8 +23,26 @@ tobox/
 │   ├── e2e/                 Playwright: full keyboard-driven daily loop
 │   └── scripts/shoot.mjs    headless screenshots for visual checks
 ├── docs/                    methodology, architecture, roadmap
-└── docker-compose.yml       api (uvicorn, SQLite volume) + web (nginx, proxies /api)
+├── scripts/smoke-image.sh   boots a built image and checks API, SPA, caching, DB writes
+├── .github/                 CI/CD workflow (test → build → smoke → publish to GHCR), Dependabot
+├── Dockerfile               single image: Vite build stage + Python runtime serving both
+└── docker-compose.yml       one service, published image (or `build: .`), SQLite volume
 ```
+
+## Deployment
+
+One image, one process. The Dockerfile builds the frontend in a Node stage (on the build
+platform, since the output is architecture-independent) and copies `dist/` into the Python
+image. `TOBOX_STATIC_DIR` makes `create_app` register a catch-all route *after* the API
+routers (`main.py: mount_spa`): real files are served (`assets/*` with immutable caching,
+everything else `no-cache`), unknown `/api/*` paths stay JSON 404s, and other paths fall back to
+`index.html` for client-side routing. In dev the variable is unset and Vite serves the UI.
+The container runs `alembic upgrade head` on start, so upgrading is just pulling a new tag.
+`TOBOX_VERSION` (set from the git ref at build time) is reported by `/api/health`.
+
+CI (`.github/workflows/ci.yml`) gates publishing on every test job, then smoke-tests the
+amd64 image with the same script as `make image` before pushing multi-arch to
+`ghcr.io/<owner>/tobox`. Actions are pinned by commit SHA (Dependabot bumps them).
 
 ## Data model
 
@@ -74,6 +92,7 @@ drift from the server.
 
 | Decision | Why |
 |---|---|
+| One image, FastAPI serves the SPA | One thing to publish, pull, and run; no nginx config to keep in sync. Gzip comes from Starlette. |
 | SQLite + single container volume | Single-user app; zero-ops; trivially backed up. Swap `TOBOX_DATABASE_URL` for Postgres if needed. |
 | Sync SQLAlchemy | Workload is tiny; sync code is simpler to read and test. |
 | Server-computed metrics in every Day response | One implementation of the rules, tested in Python. |

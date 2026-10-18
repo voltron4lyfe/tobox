@@ -1,0 +1,17 @@
+# Build context is the repo root; only backend/ and frontend/ sources are needed.
+*
+!backend/pyproject.toml
+!backend/uv.lock
+!backend/.python-version
+!backend/alembic.ini
+!backend/migrations
+!backend/src
+!frontend
+frontend/node_modules
+frontend/dist
+frontend/test-results
+frontend/playwright-report
+frontend/screenshots
+frontend/e2e
+**/__pycache__
+**/*.tsbuildinfo

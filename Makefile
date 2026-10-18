@@ -94,8 +94,12 @@ shoot: ## Screenshot pages from the running dev server: make shoot p="/plan /tod
 
 # --- Docker ------------------------------------------------------------------------------------
 
-.PHONY: up down logs
-up: ## Build and start the production stack on :8080
+.PHONY: image up down logs
+image: ## Build the Docker image locally and smoke-test it (same check CI runs)
+	docker build -t tobox:local --build-arg VERSION=local .
+	scripts/smoke-image.sh tobox:local local
+
+up: ## Build from source and start the app on :8080
 	docker compose up -d --build
 
 down: ## Stop the stack (data volume is kept)

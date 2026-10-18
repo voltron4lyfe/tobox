@@ -15,7 +15,7 @@ def add_item(client: TestClient, initiative_id: int, **kw: Any) -> dict[str, Any
 
 
 def test_health(client: TestClient) -> None:
-    assert client.get("/api/health").json() == {"status": "ok"}
+    assert client.get("/api/health").json()["status"] == "ok"
 
 
 def test_initiative_crud(client: TestClient, make_initiative: MakeInit) -> None:

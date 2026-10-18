@@ -10,7 +10,7 @@
 - History: hit rate, streaks, Q2 share, adherence, verdict calendar, time-by-quadrant chart,
   intended-vs-actual mix, initiative and day tables.
 - Keyboard-first throughout (`?` overlay, ⌘K palette, g-chords), responsive mobile/desktop,
-  dark mode, Docker deployment.
+  dark mode, single-image Docker deployment published to GHCR by GitHub Actions CI/CD.
 
 ## Next candidates
 

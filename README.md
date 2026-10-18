@@ -20,12 +20,36 @@ The reasoning behind this design (Covey + Ivy Lee + Daily Highlight + shutdown r
 
 ## Run it
 
+The app is one Docker image (API + web UI), published to GitHub Container Registry by CI.
+Copy [docker-compose.yml](docker-compose.yml) anywhere and run:
+
 ```bash
-docker compose up -d --build     # → http://localhost:8080  (TOBOX_PORT=9000 to change)
+docker compose up -d             # → http://localhost:8080
+docker compose pull && docker compose up -d     # upgrade
 ```
 
+`TOBOX_TAG` picks a release (default `latest`; `main` tracks the main branch) and `TOBOX_PORT`
+the host port. Without compose: `docker run -d -p 8080:8000 -v tobox-data:/data ghcr.io/chriscla/tobox`.
+From a checkout, `make up` builds the image from source instead.
+
 Data lives in the `tobox-data` Docker volume (SQLite). Back it up with
-`docker compose cp api:/data/tobox.db ./tobox-backup.db`.
+`docker compose cp tobox:/data/tobox.db ./tobox-backup.db`. `GET /api/health` reports the running version.
+
+## CI/CD
+
+[GitHub Actions](.github/workflows/ci.yml) runs on every push and pull request: workflow lint,
+backend (ruff, mypy, pytest), frontend (API-contract check, oxlint, prettier, tsc, Vitest),
+Playwright e2e, then builds the image and smoke-tests it (`scripts/smoke-image.sh`, also
+`make image` locally). Once everything passes, the image is published for amd64 and arm64:
+
+| Trigger | Tags |
+|---|---|
+| Push to `main` | `main`, `sha-<short>` |
+| Tag `v1.2.3` | `1.2.3`, `1.2`, `1`, `latest` (`v0.x` skips the bare major tag) |
+| Pull request | built and tested, not published |
+
+Release: `git tag v0.2.0 && git push origin v0.2.0`. Dependabot proposes weekly grouped
+updates (actions, uv, npm, base images) after a 7-day cooldown.
 
 ## Develop
 
@@ -41,7 +65,7 @@ make help      # everything else
 ```
 
 Stack: FastAPI · SQLAlchemy 2 · Alembic · SQLite | React 19 · TypeScript · Vite · Tailwind v4 ·
-TanStack Query · types generated from OpenAPI | pytest · Vitest · Playwright | Docker + nginx.
+TanStack Query · types generated from OpenAPI | pytest · Vitest · Playwright | Docker · GitHub Actions · GHCR.
 See [docs/architecture.md](docs/architecture.md). Working with an AI agent? See [CLAUDE.md](CLAUDE.md).
 
 ## Keyboard shortcuts

@@ -16,7 +16,8 @@ make e2e          # Playwright daily-loop test against isolated servers (ports 8
 make api-types    # regenerate frontend types after changing backend schemas
 make migration m="describe change"   # after changing models.py
 make shoot p="/plan /history" f="--mobile --dark"   # screenshots → frontend/screenshots/
-make up           # production stack via docker compose on :8080
+make image        # build the Docker image and smoke-test it (what CI does before publishing)
+make up           # build from source and run via docker compose on :8080
 ```
 
 Single test: `cd backend && uv run pytest tests/test_api.py -k carry` ·
@@ -54,6 +55,10 @@ Single test: `cd backend && uv run pytest tests/test_api.py -k carry` ·
 - Hotkeys pressed during a loading state hit no element: prefer intents that wait for mount
   (see `lib/events.ts` focus-log pattern) over `setTimeout`.
 - `uv` has `exclude-newer = "7 days"`: brand-new package versions won't resolve; that's on purpose.
+- CI (`.github/workflows/ci.yml`) mirrors `make check` + `make e2e` + `make image`; pushes to
+  `main` publish `ghcr.io/<owner>/tobox:main`, `v*` tags publish releases. Pin new actions by
+  commit SHA with a `# vX.Y.Z` comment. Adding files the image needs? Update `.dockerignore`
+  (it is an allowlist).
 - In zsh, unmatched globs error (`rm data/*.db*`); use explicit paths.
 
 ## Definition of done

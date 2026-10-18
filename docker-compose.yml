@@ -1,20 +1,14 @@
+# `docker compose up -d` runs the published image (ghcr.io); `make up` builds it from source.
+# TOBOX_TAG picks a release (default: latest), TOBOX_PORT the host port (default: 8080).
 services:
-  api:
-    build: ./backend
-    restart: unless-stopped
-    volumes:
-      - tobox-data:/data
-    environment:
-      TOBOX_CORS_ORIGINS: '[]'
-
-  web:
-    build: ./frontend
+  tobox:
+    image: ${TOBOX_IMAGE:-ghcr.io/chriscla/tobox}:${TOBOX_TAG:-latest}
+    build: .
     restart: unless-stopped
     ports:
-      - "${TOBOX_PORT:-8080}:80"
-    depends_on:
-      api:
-        condition: service_healthy
+      - "${TOBOX_PORT:-8080}:8000"
+    volumes:
+      - tobox-data:/data
 
 volumes:
   tobox-data:
