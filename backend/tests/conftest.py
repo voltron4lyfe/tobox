@@ -32,7 +32,7 @@ def session_factory(engine: Engine) -> sessionmaker[Session]:
 
 @pytest.fixture
 def settings() -> Settings:
-    return Settings(scheduler_enabled=False, owner_password="hunter2")
+    return Settings(scheduler_enabled=False, owner_password="hunter2", allowed_hosts=["testserver"])
 
 
 @pytest.fixture
@@ -43,8 +43,17 @@ def client(session_factory: sessionmaker[Session], settings: Settings) -> Iterat
 
     app = create_app(settings, session_factory=session_factory)
     app.dependency_overrides[get_session] = _session
-    with TestClient(app) as c:
+    with TestClient(app, headers={"X-Requested-With": "tobox"}) as c:
+        if settings.owner_password:
+            res = c.post("/api/session", json={"password": settings.owner_password})
+            assert res.status_code == 200, res.text
         yield c
+
+
+@pytest.fixture
+def anon(client: TestClient) -> TestClient:
+    """The same app, from a browser that never signed in."""
+    return TestClient(client.app, headers={"X-Requested-With": "tobox"})
 
 
 @pytest.fixture

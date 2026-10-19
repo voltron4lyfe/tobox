@@ -3,6 +3,7 @@
 import base64
 import hashlib
 import json
+import re
 import secrets
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -11,6 +12,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from tests.conftest import DAY
+from tobox.auth import PasswordGuard
 
 REDIRECT = "http://localhost:9999/callback"
 RESOURCE = "http://localhost:8000/mcp"
@@ -18,6 +20,10 @@ RESOURCE = "http://localhost:8000/mcp"
 
 def _qs(url: str) -> dict[str, str]:
     return {k: v[0] for k, v in parse_qs(urlparse(url).query).items()}
+
+
+def consent_path(location: str) -> str:
+    return urlparse(location).path + "?" + urlparse(location).query
 
 
 class Agent:
@@ -67,14 +73,26 @@ class Agent:
         self,
         location: str,
         *,
-        password: str = "hunter2",
+        browser: TestClient | None = None,
+        password: str = "",
         write: bool = True,
         action: str = "approve",
     ) -> Any:
-        form = {"request": _qs(location)["request"], "action": action, "password": password}
+        """Open the consent page in the owner's browser (signed in by default) and submit it."""
+        browser = browser or self.c
+        page = browser.get(consent_path(location))
+        assert page.status_code == 200, page.text
+        csrf = re.search(r'name="csrf" value="([^"]+)"', page.text)
+        assert csrf
+        form = {
+            "request": _qs(location)["request"],
+            "csrf": csrf[1],
+            "action": action,
+            "password": password,
+        }
         if write:
             form["allow_write"] = "1"
-        return self.c.post("/oauth/consent", data=form, follow_redirects=False)
+        return browser.post("/oauth/consent", data=form, follow_redirects=False)
 
     def exchange(self, code: str) -> Any:
         return self.c.post(
@@ -152,18 +170,62 @@ def test_metadata_advertises_exact_issuer(client: TestClient) -> None:
 
 def test_consent_page_names_the_agent_and_cannot_be_framed(client: TestClient) -> None:
     location = Agent(client, name="Claude <script>").start()
-    page = client.get(urlparse(location).path + "?" + urlparse(location).query)
+    page = client.get(consent_path(location))
     assert page.status_code == 200
     assert "Claude &lt;script&gt;" in page.text
     assert "localhost" in page.text  # where approval sends you
     assert page.headers["x-frame-options"] == "DENY"
 
 
-def test_wrong_password_issues_nothing(client: TestClient) -> None:
+def test_signed_in_browser_approves_without_password(client: TestClient) -> None:
+    page = client.get(consent_path(Agent(client).start()))
+    assert 'name="password"' not in page.text
+    assert Agent(client).connect().access
+
+
+def test_other_browser_needs_the_password(client: TestClient, anon: TestClient) -> None:
     a = Agent(client)
-    res = a.consent(a.start(), password="nope")
+    location = a.start()
+    assert 'name="password"' in anon.get(consent_path(location)).text
+    res = a.consent(location, browser=anon, password="nope")
     assert res.status_code == 403
     assert "Wrong password" in res.text
+    res = a.consent(location, browser=anon, password="hunter2")
+    assert res.status_code == 303
+    assert "code" in _qs(res.headers["location"])
+
+
+def test_password_attempts_are_rate_limited(client: TestClient, anon: TestClient) -> None:
+    client.app.state.password_guard = PasswordGuard(max_failures=2, delay=0)  # type: ignore[attr-defined]
+    a = Agent(client)
+    location = a.start()
+    for _ in range(2):
+        assert "Wrong password" in a.consent(location, browser=anon, password="x").text
+    # Locked out, even with the right password, until the failures age out.
+    res = a.consent(location, browser=anon, password="hunter2")
+    assert res.status_code == 403
+    assert "Too many wrong passwords" in res.text
+
+
+def test_consent_rejects_cross_site_posts(client: TestClient) -> None:
+    """A page elsewhere can learn a pending request id, but not the form's token."""
+    a = Agent(client)
+    request_id = _qs(a.start())["request"]
+    form = {"request": request_id, "action": "approve", "allow_write": "1"}
+    forged = client.post("/oauth/consent", data=form, follow_redirects=False)
+    assert forged.status_code == 403
+    # Even with a token from its own visit, the browser's Sec-Fetch-Site gives it away.
+    page = client.get(consent_path(a.start()))
+    csrf = re.search(r'name="csrf" value="([^"]+)"', page.text)
+    assert csrf
+    forged = client.post(
+        "/oauth/consent",
+        data={**form, "csrf": csrf[1]},
+        headers={"Sec-Fetch-Site": "cross-site"},
+        follow_redirects=False,
+    )
+    assert forged.status_code == 403
+    assert "didn't come from Tobox" in forged.text
 
 
 def test_deny_redirects_with_access_denied(client: TestClient) -> None:

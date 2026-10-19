@@ -35,7 +35,8 @@ Tobox combines the pieces that reinforce each other:
    Logs snapshot the initiative's quadrant so history stays honest if you re-classify later.
 4. **Shutdown review (the evening ritual).** A verdict on the Highlight, planned vs. actual per
    quadrant, unplanned work, a 1–5 rating, a reflection, and one-key carry-forward of unfinished
-   items.
+   items. Carrying never duplicates a task: an item already on the target day, directly or via
+   earlier carries (Mon → Tue → Wed), is skipped.
 5. **History (the feedback loop).** Hit rate, streaks, Q2 share, plan adherence, a verdict
    calendar, and an intended-vs-actual quadrant mix. These show over weeks whether urgency is
    crowding out importance.
@@ -43,8 +44,9 @@ Tobox combines the pieces that reinforce each other:
 6. **Gentle reminders (optional).** At times you choose: plan your day (only if nothing is
    planned), a Highlight nudge in the afternoon (only if no time is logged on it), and the
    evening review (only if you logged work and haven't reviewed). A reminder is skipped when it
-   has nothing to ask, and a late one (over 2h) is dropped instead of sent stale. Delivered by
-   browser notification and/or Discord.
+   has nothing to ask, and a late one (over 2h) is dropped instead of sent stale. The 2h window
+   can run past midnight (a 23:30 review reminder still goes out at 00:10, about the day before).
+   Delivered by browser notification and/or Discord.
 7. **Review with your AI agent (optional).** An assistant connected over MCP can read the day,
    gather what you did from its other tools (search, calendar, code), and propose log entries
    and a reflection. You confirm before it writes. The same rules apply as in the UI.

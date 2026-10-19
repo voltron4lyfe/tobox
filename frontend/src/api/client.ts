@@ -29,8 +29,10 @@ export type Delivery = Schemas['Delivery']
 export type NotificationLogEntry = Schemas['NotificationLogOut']
 export type Agent = Schemas['AgentOut']
 export type McpInfo = Schemas['McpInfo']
+export type SessionInfo = Schemas['SessionInfo']
 
-export const api = createClient<paths>({ baseUrl: '' })
+// The header marks requests as Tobox's own; the server refuses /api writes without it (CSRF).
+export const api = createClient<paths>({ baseUrl: '', headers: { 'X-Requested-With': 'tobox' } })
 
 export class ApiError extends Error {
   readonly status: number

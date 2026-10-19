@@ -24,24 +24,33 @@ WINDOW = timedelta(hours=2)
 INTERVAL_SECONDS = 30
 
 
-def due_kinds(prefs: Preferences, now: datetime, handled: set[str]) -> list[EventKind]:
-    """Reminders whose time window contains `now` (local) and weren't handled today."""
+def due_kinds(
+    prefs: Preferences, now: datetime, handled: Callable[[date], set[str]]
+) -> list[tuple[EventKind, date]]:
+    """Reminders whose time window contains `now` (local) and weren't handled for their day.
+
+    Each comes with the day it is about. A window that opened late yesterday (a 23:30 review
+    reminder) can still be open after midnight; it then reminds about yesterday.
+    """
     n = prefs.notifications
-    if now.weekday() not in n.days:
-        return []
-    due: list[EventKind] = []
+    due: list[tuple[EventKind, date]] = []
     for kind in RULES:
         pref = getattr(n, kind)
-        if not pref.enabled or kind in handled:
+        if not pref.enabled:
             continue
         hh, mm = map(int, pref.time.split(":"))
-        start = datetime.combine(now.date(), time(hh, mm), now.tzinfo)
-        if start <= now < start + WINDOW:
-            due.append(kind)
+        for day in (now.date(), now.date() - timedelta(days=1)):
+            start = datetime.combine(day, time(hh, mm), now.tzinfo)
+            if (
+                day.weekday() in n.days
+                and start <= now < start + WINDOW
+                and kind not in handled(day)
+            ):
+                due.append((kind, day))
     return due
 
 
-def _handled_today(session: Session, day: date) -> set[str]:
+def _handled(session: Session, day: date) -> set[str]:
     return set(session.scalars(select(NotificationLog.kind).where(NotificationLog.date == day)))
 
 
@@ -49,20 +58,19 @@ def tick(session: Session, now: datetime | None = None) -> list[str]:
     """Evaluate due reminders once. Returns the kinds that were sent."""
     prefs = prefs_store.load(session)
     now = now or prefs_store.local_now(prefs)
-    today = now.date()
     sent: list[str] = []
-    for kind in due_kinds(prefs, now, _handled_today(session, today)):
-        note = RULES[kind](services.build_day(session, today))
+    for kind, day in due_kinds(prefs, now, lambda d: _handled(session, d)):
+        note = RULES[kind](services.build_day(session, day))
         if note is None:
-            # Nothing to nudge about (e.g. already planned): settle it for today.
+            # Nothing to nudge about (e.g. already planned): settle it for that day.
             session.add(
                 NotificationLog(
-                    kind=kind, date=today, channel="-", ok=True, detail="skipped: nothing to do"
+                    kind=kind, date=day, channel="-", ok=True, detail="skipped: nothing to do"
                 )
             )
             session.commit()
             continue
-        dispatch(session, prefs, note, today)
+        dispatch(session, prefs, note, day)
         sent.append(kind)
     return sent
 

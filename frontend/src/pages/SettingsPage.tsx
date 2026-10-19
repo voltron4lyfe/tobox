@@ -4,7 +4,9 @@ import {
   Bot,
   Check,
   Copy,
+  KeyRound,
   Laptop,
+  LogOut,
   MessageSquare,
   Moon,
   Palette,
@@ -26,9 +28,13 @@ import {
   useNotificationLog,
   usePreferences,
   useSavePreferences,
+  type PreferencesChange,
   useSendTestNotification,
+  useSession,
+  useSignOut,
   useWebPushConfig,
 } from '../api/hooks'
+import { SIGN_OUT_KEYS } from '../components/AppShell'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { DraftInput } from '../components/DraftInput'
 import { Kbd } from '../components/Kbd'
@@ -91,9 +97,9 @@ export function SettingsPage() {
   if (prefs.isPending) return <LoadingBlock />
   if (prefs.error) return <ErrorBlock error={prefs.error} />
   const p = prefs.data
-  const update = (next: Preferences) => save.mutate(next, { onError })
+  const update = (change: PreferencesChange) => save.mutate(change, { onError })
   const updateNotifications = (n: Partial<NotificationPrefs>) =>
-    update({ ...p, notifications: { ...p.notifications, ...n } })
+    update((cur) => ({ ...cur, notifications: { ...cur.notifications, ...n } }))
 
   return (
     <>
@@ -104,6 +110,7 @@ export function SettingsPage() {
       />
       <div className="space-y-6">
         <Appearance />
+        <SignInSection />
 
         <Section
           icon={Bell}
@@ -112,7 +119,7 @@ export function SettingsPage() {
         >
           <TimezoneRow
             value={p.timezone ?? ''}
-            onCommit={(timezone) => update({ ...p, timezone: timezone || null })}
+            onCommit={(timezone) => update((cur) => ({ ...cur, timezone: timezone || null }))}
           />
           {REMINDERS.map((r) => {
             const pref = p.notifications[r.kind]
@@ -292,6 +299,29 @@ function Row({
   )
 }
 
+// --- Sign-in ---------------------------------------------------------------------------------
+
+function SignInSection() {
+  const session = useSession()
+  const signOut = useSignOut()
+  const onError = useErrorToast()
+  if (!session.data?.password_required) return null
+  return (
+    <Section icon={KeyRound} title="Sign-in">
+      <Row label="This browser is signed in" hint="Sessions last 30 days after your last visit.">
+        <button
+          type="button"
+          className="btn-outline"
+          onClick={() => signOut.mutate(undefined, { onError })}
+          disabled={signOut.isPending}
+        >
+          <LogOut className="size-4" /> Sign out <Kbd keys={SIGN_OUT_KEYS} />
+        </button>
+      </Row>
+    </Section>
+  )
+}
+
 // --- Appearance ------------------------------------------------------------------------------
 
 function Appearance() {
@@ -398,7 +428,7 @@ function BrowserChannel({
   update,
 }: {
   prefs: Preferences
-  update: (p: Preferences) => void
+  update: (change: PreferencesChange) => void
 }) {
   const webpush = useWebPushConfig()
   const state = usePushState()
@@ -409,13 +439,13 @@ function BrowserChannel({
   const [busy, setBusy] = useState(false)
   const pref = p.notifications.channels.webpush
   const setEnabled = (enabled: boolean) =>
-    update({
-      ...p,
+    update((cur) => ({
+      ...cur,
       notifications: {
-        ...p.notifications,
-        channels: { ...p.notifications.channels, webpush: { enabled } },
+        ...cur.notifications,
+        channels: { ...cur.notifications.channels, webpush: { enabled } },
       },
-    })
+    }))
 
   const run = async (action: () => Promise<PushState>) => {
     setBusy(true)
@@ -585,7 +615,7 @@ function AgentsSection() {
           Add it as a remote MCP server (custom connector) in your agent. It signs in with OAuth:
           your browser opens a Tobox page where you approve read or read &amp; write access.
           {mcp.data?.password_required &&
-            ' Approving asks for the owner password (TOBOX_OWNER_PASSWORD).'}
+            ' Approving in a browser that isn’t signed in to Tobox asks for the owner password.'}
         </p>
       </div>
 

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from tobox import services
 from tobox.config import get_settings
+from tobox.db import insert_if_missing
 from tobox.errors import ConflictError, InvalidError, get_or_404
 from tobox.metrics import summarize_range
 from tobox.models import Day, Initiative, InitiativeStatus, LogEntry, PlannedItem
@@ -69,11 +70,19 @@ def delete_initiative(session: Session, initiative_id: int) -> None:
 # --- Days ------------------------------------------------------------------------
 
 
-def update_day(session: Session, day: date, body: DayUpdate) -> DayOut:
+def _ensure_day(session: Session, day: date) -> Day:
+    """The day's row, created if missing. An upsert, so concurrent first writes (the UI's
+    autosave and an agent, say) both succeed instead of one hitting a primary-key conflict."""
+    if (row := session.get(Day, day)) is not None:
+        return row
+    insert_if_missing(session, Day, date=day, intention="", reflection="")
     row = session.get(Day, day)
-    if row is None:
-        row = Day(date=day, intention="", reflection="")
-        session.add(row)
+    assert row is not None
+    return row
+
+
+def update_day(session: Session, day: date, body: DayUpdate) -> DayOut:
+    row = _ensure_day(session, day)
     data = body.model_dump(exclude_unset=True)
     now = datetime.now(UTC)
     if "planned" in data:
@@ -166,16 +175,29 @@ def reorder_items(session: Session, day: date, ids: list[int]) -> DayOut:
     return services.build_day(session, day)
 
 
+def _origin(session: Session, item: PlannedItem) -> int:
+    """The id of the item a carry chain started from (the item itself if never carried)."""
+    seen = {item.id}
+    while item.carried_from_id is not None and item.carried_from_id not in seen:
+        parent = session.get(PlannedItem, item.carried_from_id)
+        if parent is None:
+            break
+        seen.add(parent.id)
+        item = parent
+    return item.id
+
+
 def carry_forward(session: Session, day: date, body: CarryForwardRequest) -> DayOut:
-    """Copy the day's unfinished items onto another day (skipping ones already carried)."""
+    """Copy the day's unfinished items onto another day, skipping any task already there
+    (directly or through a chain of earlier carries)."""
     if body.to_date == day:
         raise InvalidError("to_date must differ from the source day")
     source = [i for i in services.day_items(session, day) if not i.done]
     if body.item_ids is not None:
         source = [i for i in source if i.id in set(body.item_ids)]
     target = services.day_items(session, body.to_date)
-    already = {i.carried_from_id for i in target}
-    pending = [i for i in source if i.id not in already]
+    already = {_origin(session, i) for i in target}
+    pending = [i for i in source if _origin(session, i) not in already]
     _ensure_capacity(target, len(pending))
     for item in pending:
         copy = PlannedItem(

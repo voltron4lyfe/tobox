@@ -12,6 +12,7 @@ import {
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 
+import { useSession, useSignOut } from '../api/hooks'
 import { addDays, relativeDayLabel, today } from '../lib/dates'
 import { requestFocusLog } from '../lib/events'
 import { useHotkeys } from '../lib/hotkeys'
@@ -63,6 +64,7 @@ const NAV: NavItem[] = [
   },
 ]
 const SETTINGS = NAV.length - 1
+export const SIGN_OUT_KEYS = 'shift+q'
 
 export function AppShell() {
   const location = useLocation()
@@ -73,6 +75,8 @@ export function AppShell() {
   const isDayPage = NAV.some((n) => n.dayScoped && location.pathname.startsWith(n.to))
   const hrefFor = (n: NavItem) => (n.dayScoped ? dayHref(n.to, date) : n.to)
   const cycleTheme = useCycleTheme()
+  const session = useSession()
+  const signOut = useSignOut()
 
   useHotkeys([
     ...NAV.map((n) => ({
@@ -116,6 +120,13 @@ export function AppShell() {
       description: 'Switch theme (system / light / dark)',
       group: 'General',
       handler: cycleTheme,
+    },
+    {
+      keys: SIGN_OUT_KEYS,
+      description: 'Sign out',
+      group: 'General',
+      enabled: !!session.data?.password_required,
+      handler: () => signOut.mutate(),
     },
     {
       keys: '?',
@@ -228,7 +239,7 @@ export function AppShell() {
   )
 }
 
-function Brand({ compact = false }: { compact?: boolean }) {
+export function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <NavLink to="/" className="flex items-center gap-2 px-1.5">
       <span className="grid size-6 grid-cols-2 gap-[2px] rounded-md p-[3px] ring-1 ring-line">

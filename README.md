@@ -38,8 +38,9 @@ From a checkout, `make up` builds the image from source instead.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `TOBOX_PUBLIC_URL` | `http://localhost:8000` | URL you reach Tobox at; used for MCP/OAuth and links in notifications |
-| `TOBOX_OWNER_PASSWORD` | unset | Required to approve AI agents from anywhere but the host itself. **Set it if Tobox is reachable over a network.** |
+| `TOBOX_PUBLIC_URL` | `http://localhost:8000` | URL you reach Tobox at; used for MCP/OAuth, links in notifications, and the allowed `Host` |
+| `TOBOX_OWNER_PASSWORD` | unset | Sign-in password for the web UI and API, also asked when approving an AI agent from a browser that isn't signed in. Unset means anyone who can reach Tobox is the owner. **Set it unless Tobox is localhost-only or behind a reverse proxy that authenticates you.** |
+| `TOBOX_ALLOWED_HOSTS` | `[]` | Extra `Host` names to accept (JSON list) besides `TOBOX_PUBLIC_URL`'s and localhost. Others get a 400 (DNS-rebinding defence); `["*"]` accepts any |
 | `TOBOX_SCHEDULER_ENABLED` | `true` | Send reminders |
 
 Browser notifications need HTTPS (or `localhost`). To connect an agent, copy the MCP URL from

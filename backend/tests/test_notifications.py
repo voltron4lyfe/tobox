@@ -1,6 +1,6 @@
 import base64
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, ClassVar
 from zoneinfo import ZoneInfo
 
@@ -100,22 +100,38 @@ def test_review_reminder_until_reviewed(client: TestClient, make_initiative: Any
 # --- Scheduling ------------------------------------------------------------------------------
 
 
+def none_handled(_: date) -> set[str]:
+    return set()
+
+
 def test_due_inside_window_only() -> None:
     p = Preferences()  # plan 08:30, nudge 14:00, review 17:30, Mon-Fri
-    assert due_kinds(p, at(8, 29), set()) == []
-    assert due_kinds(p, at(8, 30), set()) == ["plan_reminder"]
-    assert due_kinds(p, at(10, 29), set()) == ["plan_reminder"]
-    assert due_kinds(p, at(10, 30), set()) == []  # too late: never send a stale reminder
-    assert due_kinds(p, at(17, 45), set()) == ["review_reminder"]
+    today = Monday.date()
+    assert due_kinds(p, at(8, 29), none_handled) == []
+    assert due_kinds(p, at(8, 30), none_handled) == [("plan_reminder", today)]
+    assert due_kinds(p, at(10, 29), none_handled) == [("plan_reminder", today)]
+    assert due_kinds(p, at(10, 30), none_handled) == []  # too late: never send a stale reminder
+    assert due_kinds(p, at(17, 45), none_handled) == [("review_reminder", today)]
 
 
 def test_due_respects_handled_disabled_and_weekdays() -> None:
     p = Preferences()
-    assert due_kinds(p, at(8, 45), {"plan_reminder"}) == []
+    assert due_kinds(p, at(8, 45), lambda _: {"plan_reminder"}) == []
     p.notifications.plan_reminder.enabled = False
-    assert due_kinds(p, at(8, 45), set()) == []
+    assert due_kinds(p, at(8, 45), none_handled) == []
     saturday = at(17, 45, Monday.replace(day=7))
-    assert due_kinds(Preferences(), saturday, set()) == []
+    assert due_kinds(Preferences(), saturday, none_handled) == []
+
+
+def test_window_crossing_midnight_reminds_about_yesterday() -> None:
+    p = Preferences()
+    p.notifications.review_reminder.time = "23:30"
+    tuesday = Monday + timedelta(days=1)
+    just_after = at(0, 10, tuesday)
+    assert due_kinds(p, just_after, none_handled) == [("review_reminder", Monday.date())]
+    handled_monday = {Monday.date(): {"review_reminder"}}
+    assert due_kinds(p, just_after, lambda d: handled_monday.get(d, set())) == []
+    assert due_kinds(p, at(1, 30, tuesday), none_handled) == []  # window closed at 01:30
 
 
 def test_tick_sends_once_and_settles_skips(

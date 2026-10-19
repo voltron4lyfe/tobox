@@ -20,7 +20,11 @@ def dist(tmp_path: Path) -> Path:
 @pytest.fixture
 def spa(dist: Path) -> TestClient:
     return TestClient(
-        create_app(Settings(static_dir=dist, version="v9.9.9", scheduler_enabled=False))
+        create_app(
+            Settings(
+                static_dir=dist, version="v9.9.9", scheduler_enabled=False, allowed_hosts=["*"]
+            )
+        )
     )
 
 
@@ -55,12 +59,17 @@ def test_cannot_escape_static_dir(spa: TestClient) -> None:
 
 
 def test_no_spa_without_static_dir() -> None:
-    assert TestClient(create_app(Settings(scheduler_enabled=False))).get("/plan").status_code == 404
+    assert (
+        TestClient(create_app(Settings(scheduler_enabled=False, allowed_hosts=["*"])))
+        .get("/plan")
+        .status_code
+        == 404
+    )
 
 
 def test_missing_index_fails_fast(tmp_path: Path) -> None:
     with pytest.raises(RuntimeError, match=r"index\.html"):
-        create_app(Settings(static_dir=tmp_path, scheduler_enabled=False))
+        create_app(Settings(static_dir=tmp_path, scheduler_enabled=False, allowed_hosts=["*"]))
 
 
 def test_head_requests_are_supported(spa: TestClient) -> None:

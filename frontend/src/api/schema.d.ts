@@ -21,6 +21,28 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/session': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Session Info
+     * @description Whether a sign-in is needed. Renews the cookie, so active browsers stay signed in.
+     */
+    get: operations['get_session_info_api_session_get']
+    put?: never
+    /** Sign In */
+    post: operations['sign_in_api_session_post']
+    /** Sign Out */
+    delete: operations['sign_out_api_session_delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/initiatives': {
     parameters: {
       query?: never
@@ -371,7 +393,7 @@ export interface paths {
     }
     /**
      * Mcp Info
-     * @description Where agents connect, and whether approving them needs the owner password.
+     * @description Where agents connect, and whether approving them can need the owner password.
      */
     get: operations['mcp_info_api_agents_mcp_get']
     put?: never
@@ -1144,6 +1166,18 @@ export interface components {
       /** Ids */
       ids: number[]
     }
+    /** SessionInfo */
+    SessionInfo: {
+      /** Password Required */
+      password_required: boolean
+      /** Signed In */
+      signed_in: boolean
+    }
+    /** SignInRequest */
+    SignInRequest: {
+      /** Password */
+      password: string
+    }
     /** ValidationError */
     ValidationError: {
       /** Location */
@@ -1226,6 +1260,77 @@ export interface operations {
             [key: string]: string
           }
         }
+      }
+    }
+  }
+  get_session_info_api_session_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SessionInfo']
+        }
+      }
+    }
+  }
+  sign_in_api_session_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignInRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SessionInfo']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  sign_out_api_session_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }

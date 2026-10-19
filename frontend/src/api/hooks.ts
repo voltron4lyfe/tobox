@@ -12,9 +12,11 @@ import {
   type PlannedItemCreate,
   type PlannedItemUpdate,
   type Preferences,
+  type SessionInfo,
 } from './client'
 
 export const keys = {
+  session: ['session'] as const,
   initiatives: (includeArchived = false) => ['initiatives', { includeArchived }] as const,
   day: (date: string) => ['day', date] as const,
   metrics: (start: string, end: string) => ['metrics', start, end] as const,
@@ -57,6 +59,8 @@ function useInitiativeMutation<V>(fn: (vars: V) => Promise<unknown>) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['initiatives'] })
       void qc.invalidateQueries({ queryKey: ['metrics'] })
+      // Days show initiative titles, and deleting one cascades to its items and logs.
+      void qc.invalidateQueries({ queryKey: ['day'] })
     },
   })
 }
@@ -169,20 +173,27 @@ export function usePreferences() {
   })
 }
 
-/** Saves the whole document. Applied to the cache immediately and rolled back on failure. */
+export type PreferencesChange = (current: Preferences) => Preferences
+
+/**
+ * Saves a change to the preferences document. Saves run one at a time, and each change is
+ * applied to the latest document when its turn comes, so quick successive edits (the timezone
+ * sync and a theme toggle, say) never overwrite one another. Shown immediately; refetched if
+ * the save fails.
+ */
 export function useSavePreferences() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (body: Preferences) => unwrap(api.PUT('/api/preferences', { body })),
-    onMutate: async (next) => {
+    scope: { id: 'preferences' },
+    mutationFn: async (change: PreferencesChange) => {
       await qc.cancelQueries({ queryKey: keys.preferences })
-      const previous = qc.getQueryData<Preferences>(keys.preferences)
+      const current = qc.getQueryData<Preferences>(keys.preferences)
+      if (!current) throw new Error('Preferences are still loading')
+      const next = change(current)
       qc.setQueryData(keys.preferences, next)
-      return { previous }
+      return unwrap(api.PUT('/api/preferences', { body: next }))
     },
-    onError: (_err, _next, ctx) => {
-      if (ctx?.previous) qc.setQueryData(keys.preferences, ctx.previous)
-    },
+    onError: () => void qc.invalidateQueries({ queryKey: keys.preferences }),
     onSuccess: (saved) => {
       qc.setQueryData(keys.preferences, saved)
       void qc.invalidateQueries({ queryKey: keys.channels })
@@ -247,5 +258,38 @@ export function useDisconnectAgent() {
     mutationFn: (clientId: string) =>
       unwrap(api.DELETE('/api/agents/{client_id}', { params: { path: { client_id: clientId } } })),
     onSuccess: () => void qc.invalidateQueries({ queryKey: keys.agents }),
+  })
+}
+
+// --- Sign-in -------------------------------------------------------------------------------
+
+export function useSession() {
+  return useQuery({
+    queryKey: keys.session,
+    queryFn: () => unwrap(api.GET('/api/session')),
+    staleTime: Infinity,
+  })
+}
+
+export function useSignIn() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (password: string) => unwrap(api.POST('/api/session', { body: { password } })),
+    onSuccess: (session) => {
+      qc.setQueryData(keys.session, session)
+      void qc.invalidateQueries({ predicate: (q) => q.queryKey[0] !== 'session' })
+    },
+  })
+}
+
+export function useSignOut() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.DELETE('/api/session')),
+    onSuccess: () => {
+      qc.setQueryData<SessionInfo>(keys.session, { password_required: true, signed_in: false })
+      // Drop the owner's data from memory; it refetches after the next sign-in.
+      qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'session' })
+    },
   })
 }

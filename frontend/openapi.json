@@ -30,6 +30,79 @@
         }
       }
     },
+    "/api/session": {
+      "get": {
+        "tags": [
+          "session"
+        ],
+        "summary": "Get Session Info",
+        "description": "Whether a sign-in is needed. Renews the cookie, so active browsers stay signed in.",
+        "operationId": "get_session_info_api_session_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionInfo"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "session"
+        ],
+        "summary": "Sign In",
+        "operationId": "sign_in_api_session_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionInfo"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "session"
+        ],
+        "summary": "Sign Out",
+        "operationId": "sign_out_api_session_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
     "/api/initiatives": {
       "get": {
         "tags": [
@@ -1068,7 +1141,7 @@
           "agents"
         ],
         "summary": "Mcp Info",
-        "description": "Where agents connect, and whether approving them needs the owner password.",
+        "description": "Where agents connect, and whether approving them can need the owner password.",
         "operationId": "mcp_info_api_agents_mcp_get",
         "responses": {
           "200": {
@@ -2733,6 +2806,38 @@
           "ids"
         ],
         "title": "ReorderRequest"
+      },
+      "SessionInfo": {
+        "properties": {
+          "password_required": {
+            "type": "boolean",
+            "title": "Password Required"
+          },
+          "signed_in": {
+            "type": "boolean",
+            "title": "Signed In"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password_required",
+          "signed_in"
+        ],
+        "title": "SessionInfo"
+      },
+      "SignInRequest": {
+        "properties": {
+          "password": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "title": "SignInRequest"
       },
       "ValidationError": {
         "properties": {

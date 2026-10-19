@@ -1,7 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router'
 
+import { ApiError } from './api/client'
+import { keys } from './api/hooks'
 import { AppShell } from './components/AppShell'
+import { AuthGate } from './components/SignIn'
 import { ToastProvider } from './components/Toast'
 import { HotkeyProvider } from './lib/hotkeys'
 import { HistoryPage } from './pages/HistoryPage'
@@ -12,13 +15,32 @@ import { ReviewPage } from './pages/ReviewPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { TodayPage } from './pages/TodayPage'
 
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 15_000, retry: 1, refetchOnWindowFocus: true } },
+/** A 401 means the session ended (expired, or signed out elsewhere): re-check it to show sign-in. */
+const onApiError = (error: Error) => {
+  if (error instanceof ApiError && error.status === 401) {
+    void queryClient.invalidateQueries({ queryKey: keys.session })
+  }
+}
+
+const queryClient: QueryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: onApiError }),
+  mutationCache: new MutationCache({ onError: onApiError }),
+  defaultOptions: {
+    queries: {
+      staleTime: 15_000,
+      retry: (count, error) => !(error instanceof ApiError && error.status === 401) && count < 1,
+      refetchOnWindowFocus: true,
+    },
+  },
 })
 
 export const routes = [
   {
-    element: <AppShell />,
+    element: (
+      <AuthGate>
+        <AppShell />
+      </AuthGate>
+    ),
     children: [
       { index: true, element: <HomeRedirect /> },
       { path: 'plan', element: <PlanPage /> },

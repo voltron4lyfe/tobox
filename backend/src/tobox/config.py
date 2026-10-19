@@ -19,8 +19,12 @@ class Settings(BaseSettings):
     # Externally reachable base URL (no trailing slash). OAuth issuer + MCP resource identifier,
     # and absolute links in notifications. Must be https unless it is localhost.
     public_url: str = "http://localhost:8000"
-    # Required to approve AI-agent (MCP OAuth) access from anywhere but this machine's loopback.
+    # When set, the web UI and REST API require signing in with it, and approving an AI agent
+    # needs it (or a signed-in browser). Unset: anyone who can reach Tobox is the owner, so only
+    # leave it unset on localhost or behind an authenticating reverse proxy.
     owner_password: str | None = None
+    # Host headers accepted besides public_url's host and localhost (DNS-rebinding defence).
+    allowed_hosts: list[str] = []
     # Background loop that sends scheduled reminders. Disabled in tests.
     scheduler_enabled: bool = True
     # VAPID "sub" claim: how push services can contact the operator.

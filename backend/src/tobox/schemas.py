@@ -335,3 +335,16 @@ class McpInfo(BaseModel):
     url: str
     issuer: str
     password_required: bool
+    """Whether approving an agent asks for the owner password (unless the browser is signed in)."""
+
+
+# --- Sign-in ---------------------------------------------------------------------------
+
+
+class SessionInfo(BaseModel):
+    password_required: bool
+    signed_in: bool
+
+
+class SignInRequest(BaseModel):
+    password: Annotated[str, Field(max_length=1000)]

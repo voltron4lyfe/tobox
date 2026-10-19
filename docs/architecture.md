@@ -12,12 +12,13 @@ tobox/
 │   │   ├── services.py      assembles a Day response from rows
 │   │   ├── ops.py           domain operations shared by the REST API and MCP tools
 │   │   ├── errors.py        DomainError → 404/409/422 (HTTP) or tool errors (MCP)
+│   │   ├── auth.py          owner sign-in (session cookie), password rate limit, Host/CSRF guard
 │   │   ├── prefs.py         the Preferences document (theme, timezone, notifications)
 │   │   ├── notify/          events (pure rules) → dispatch → channels (web push, Discord);
 │   │   │                    scheduler loop that fires reminders
 │   │   ├── agents/          MCP server (tools + prompts) and its OAuth 2.1 authorization server
-│   │   ├── api/             routers: initiatives, days (+items, logs), metrics, preferences,
-│   │   │                    notifications, agents
+│   │   ├── api/             routers: session (sign-in), initiatives, days (+items, logs),
+│   │   │                    metrics, preferences, notifications, agents
 │   │   ├── seed.py          demo data (make seed)
 │   │   └── openapi.py       prints the OpenAPI schema (make api-types)
 │   ├── migrations/          Alembic (render_as_batch for SQLite)
@@ -106,11 +107,33 @@ Tools call the same `ops.py` functions as the REST API, so rules are identical.
 Access uses OAuth 2.1 with Tobox as its own authorization server (`agents/oauth.py`): dynamic
 client registration, PKCE, a consent page at `/oauth/consent` (read, or read & write scopes),
 1h access tokens and rotating 30-day refresh tokens, all stored hashed, with tokens bound to the
-`/mcp` resource (RFC 8707). Consent requires `TOBOX_OWNER_PASSWORD` unless the browser is on the
-same machine (loopback). The container doesn't trust `X-Forwarded-For`, so a proxy can't fake
-loopback. **Behind a proxy, set the password.** `TOBOX_PUBLIC_URL` must be the URL agents use
-(it is the OAuth issuer and resource). Settings lists connected agents; disconnecting one
-revokes its tokens.
+`/mcp` resource (RFC 8707). Approving asks for `TOBOX_OWNER_PASSWORD` unless the browser is
+signed in (see below). The consent form carries a per-render token that must match a
+SameSite=Strict cookie, and cross-site `Sec-Fetch-Site` posts are refused, so another site can't
+submit an approval through the owner's browser. `TOBOX_PUBLIC_URL` must be the URL agents use (it
+is the OAuth issuer and resource). Settings lists connected agents; disconnecting one revokes its
+tokens.
+
+## Access control
+
+`auth.py` holds the trust model, applied the same way to the REST API and the consent page:
+
+- **No `TOBOX_OWNER_PASSWORD`**: anyone who can reach Tobox is the owner. Fine on localhost, or
+  behind a reverse proxy that authenticates (e.g. SSO). There is no IP-based exception: behind
+  Docker or a proxy, the client address says nothing about who is asking.
+- **Password set**: every `/api` route except `/api/health` and `/api/session` needs a signed-in
+  browser. `POST /api/session` checks the password and sets an HMAC-signed, HttpOnly,
+  SameSite=Lax cookie (30 days, renewed on each visit; the key lives in `app_state`, and the
+  signature covers the password's digest, so changing the password signs everyone out). The SPA
+  shows a sign-in screen (`components/SignIn.tsx`) while `GET /api/session` says it's needed,
+  and re-checks after any 401.
+- **Password guesses** (sign-in and consent) go through one `PasswordGuard`: attempts are
+  serialized with a 1 s delay per failure, and 10 failures in 15 minutes lock both out until the
+  oldest ages out.
+- **`RequestGuard` middleware**, in both modes: requests whose `Host` isn't `TOBOX_PUBLIC_URL`'s,
+  localhost, or in `TOBOX_ALLOWED_HOSTS` get a 400 (DNS rebinding), and `/api` writes without
+  `X-Requested-With: tobox` get a 403 (CSRF; the typed client always sends it, and a custom header
+  can't be sent cross-site without a CORS preflight).
 
 ## API contract
 
@@ -160,7 +183,7 @@ drift from the server.
 | Sync SQLAlchemy | Workload is tiny; sync code is simpler to read and test. |
 | Server-computed metrics in every Day response | One implementation of the rules, tested in Python. |
 | Generated TS types from OpenAPI | Agents and humans can't silently break the contract. |
-| No login for the web UI | Personal tool run on your own machine/network. Put it behind a reverse proxy with auth if exposed. |
+| One owner password, no accounts | Single-user tool. Unset, it trusts the network or an authenticating proxy; set, it's a sign-in. |
 | Built-in OAuth server for MCP only | Agents need delegated, revocable, scoped tokens; MCP clients expect OAuth discovery. Doesn't depend on an external identity provider. |
 | Channels behind a protocol + registry | Adding email/Slack is one class and one settings field; dispatch, tests, and UI stay generic. |
 | Reminders only when relevant | A nudge with nothing to act on trains you to ignore them. |

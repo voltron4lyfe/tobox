@@ -3,15 +3,15 @@ from collections.abc import AsyncIterator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from pathlib import Path
 
-from fastapi import APIRouter, FastAPI, HTTPException, Request
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.orm import Session
 
-from tobox import agents
+from tobox import agents, auth
 from tobox.api import agents as agents_api
-from tobox.api import days, initiatives, metrics, notifications, preferences
+from tobox.api import days, initiatives, metrics, notifications, preferences, session
 from tobox.config import Settings, get_settings
 from tobox.db import SessionLocal
 from tobox.errors import DomainError
@@ -43,6 +43,7 @@ def create_app(
 
     app = FastAPI(title="Tobox", version="0.1.0", lifespan=lifespan)
     app.state.settings = settings
+    app.state.password_guard = auth.PasswordGuard()
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -50,6 +51,8 @@ def create_app(
         allow_headers=["*"],
     )
     app.add_middleware(GZipMiddleware, minimum_size=1024)
+    # Added last so it runs first: nothing is served for a foreign Host header.
+    app.add_middleware(auth.RequestGuard, settings=settings)
 
     @app.exception_handler(DomainError)
     async def domain_error(_: Request, exc: DomainError) -> JSONResponse:
@@ -61,12 +64,10 @@ def create_app(
     def health() -> dict[str, str]:
         return {"status": "ok", "version": settings.version}
 
-    api.include_router(initiatives.router)
-    api.include_router(days.router)
-    api.include_router(metrics.router)
-    api.include_router(preferences.router)
-    api.include_router(notifications.router)
-    api.include_router(agents_api.router)
+    api.include_router(session.router)
+    owner = [Depends(auth.require_owner)]
+    for router in (initiatives, days, metrics, preferences, notifications, agents_api):
+        api.include_router(router.router, dependencies=owner)
     app.include_router(api)
     background.append(agents.mount(app, sessions, settings))
     if settings.static_dir is not None:

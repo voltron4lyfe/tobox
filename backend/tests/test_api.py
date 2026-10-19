@@ -1,9 +1,14 @@
 from collections.abc import Callable
+from datetime import date
 from typing import Any
 
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session, sessionmaker
 
 from tests.conftest import DAY, NEXT_DAY
+from tobox import ops
+from tobox.models import Day
+from tobox.schemas import DayUpdate
 
 MakeInit = Callable[..., dict[str, Any]]
 
@@ -241,6 +246,34 @@ def test_carry_forward_selected_items(client: TestClient, make_initiative: MakeI
     # Carrying everything afterwards adds only what's missing.
     target = client.post(f"/api/days/{DAY}/carry-forward", json={"to_date": NEXT_DAY}).json()
     assert sorted(i["title"] for i in target["items"]) == ["one", "two"]
+
+
+def test_carry_forward_follows_carry_chains(client: TestClient, make_initiative: MakeInit) -> None:
+    """Mon → Tue → Wed, then Mon → Wed: the task is already on Wednesday, via Tuesday."""
+    wed = "2026-03-04"
+    init = make_initiative()
+    add_item(client, init["id"], title="chapter")
+    client.post(f"/api/days/{DAY}/carry-forward", json={"to_date": NEXT_DAY})
+    client.post(f"/api/days/{NEXT_DAY}/carry-forward", json={"to_date": wed})
+    target = client.post(f"/api/days/{DAY}/carry-forward", json={"to_date": wed}).json()
+    assert [i["title"] for i in target["items"]] == ["chapter"]
+
+
+def test_first_write_to_a_day_tolerates_a_concurrent_insert(
+    session_factory: sessionmaker[Session],
+) -> None:
+    """Two writers both saw no Day row; the second insert must not fail."""
+    with session_factory() as s:
+        s.add(Day(date=date(2026, 3, 2), intention="from the UI", reflection=""))
+        s.commit()
+    with session_factory() as s:
+        real_get = s.get
+        calls = iter([None])
+        # The first lookup misses, as if it ran just before the other writer committed.
+        s.get = lambda model, ident, **kw: next(calls, None) or real_get(model, ident, **kw)  # type: ignore[method-assign]
+        day = ops.update_day(s, date(2026, 3, 2), DayUpdate(rating=4))
+    assert day.intention == "from the UI"
+    assert day.rating == 4
 
 
 def test_timestamps_are_utc_aware(client: TestClient, make_initiative: MakeInit) -> None:

@@ -6,7 +6,9 @@ RFC 8414/9728 metadata); this module supplies storage and the human consent step
   agent → /authorize → `authorize()` stores a pending request → /oauth/consent (owner approves)
         → auth code → /token → access + refresh tokens (hashed at rest) → Bearer on /mcp
 
-Consent requires `TOBOX_OWNER_PASSWORD`, except from this machine's loopback address.
+With `TOBOX_OWNER_PASSWORD` set, approving needs it or a browser signed in to Tobox (see
+`tobox.auth` for the trust model). The consent form carries a per-render token matched against a
+SameSite=Strict cookie, so no other site can submit an approval through the owner's browser.
 """
 
 import hashlib
@@ -36,6 +38,7 @@ from mcp.shared.auth import OAuthClientInformationFull, OAuthToken
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from tobox import auth
 from tobox.config import Settings
 from tobox.models import OAuthClient, OAuthGrant
 from tobox.models import OAuthToken as TokenRow
@@ -46,7 +49,8 @@ ACCESS_TTL = timedelta(hours=1)
 REFRESH_TTL = timedelta(days=30)
 CODE_TTL = timedelta(minutes=5)
 PENDING_TTL = timedelta(minutes=15)
-LOOPBACK = {"127.0.0.1", "::1"}
+CSRF_COOKIE = "tobox_consent"
+CONSENT_PATH = "/oauth/consent"
 
 SessionFactory = Callable[[], Session]
 
@@ -273,16 +277,27 @@ def consent_router(session_factory: SessionFactory, settings: Settings) -> APIRo
             OAuthClientInformationFull.model_validate_json(client_row.info),
         )
 
-    def password_required(request: Request) -> bool:
-        return bool(settings.owner_password) or (
-            request.client is None or request.client.host not in LOOPBACK
-        )
+    def needs_password(request: Request, s: Session) -> bool:
+        return not auth.signed_in(request, s, settings)
 
-    @router.get("/oauth/consent")
+    def with_csrf(response: Response, token: str) -> Response:
+        response.set_cookie(
+            CSRF_COOKIE,
+            token,
+            max_age=int(PENDING_TTL.total_seconds()),
+            path=CONSENT_PATH,
+            httponly=True,
+            samesite="strict",
+            secure=settings.public_url.startswith("https://"),
+        )
+        return response
+
+    @router.get(CONSENT_PATH)
     def show(request: Request) -> Response:
         request_id = request.query_params.get("request", "")
         with session_factory() as s:
             found = pending(s, request_id)
+            ask = needs_password(request, s)
         if found is None:
             return _page(
                 "Request expired",
@@ -291,26 +306,35 @@ def consent_router(session_factory: SessionFactory, settings: Settings) -> APIRo
                 400,
             )
         _, params, client = found
-        return _page(
+        token = secrets.token_urlsafe(24)
+        page = _page(
             "Connect an AI agent",
-            _consent_form(
-                request_id,
-                client,
-                params,
-                needs_password=password_required(request),
-                password_configured=bool(settings.owner_password),
-                error="",
-            ),
+            _consent_form(request_id, token, client, params, needs_password=ask, error=""),
         )
+        return with_csrf(page, token)
 
-    @router.post("/oauth/consent")
+    @router.post(CONSENT_PATH)
     async def decide(
         request: Request,
         request_id: str = Form(alias="request"),
+        csrf: str = Form(default=""),
         action: str = Form(),
         password: str = Form(default=""),
         allow_write: str = Form(default=""),
     ) -> Response:
+        cookie = request.cookies.get(CSRF_COOKIE, "")
+        fetch_site = request.headers.get("sec-fetch-site", "same-origin")
+        if (
+            not cookie
+            or not hmac.compare_digest(csrf.encode(), cookie.encode())
+            or fetch_site not in ("same-origin", "none")
+        ):
+            return _page(
+                "Request not accepted",
+                "<p>This approval didn't come from Tobox's own page. "
+                "Start the connection again from your AI agent.</p>",
+                403,
+            )
         with session_factory() as s:
             found = pending(s, request_id)
             if found is None:
@@ -326,25 +350,19 @@ def consent_router(session_factory: SessionFactory, settings: Settings) -> APIRo
                     ),
                     303,
                 )
-            if password_required(request):
-                expected = settings.owner_password
-                if not expected or not hmac.compare_digest(password.encode(), expected.encode()):
-                    await anyio.sleep(1)  # blunt brute force
-                    reason = (
-                        "Wrong password."
-                        if expected
-                        else "Set TOBOX_OWNER_PASSWORD on the server to approve agents "
-                        "from other devices."
-                    )
+            if needs_password(request, s):
+                assert settings.owner_password
+                guard: auth.PasswordGuard = request.app.state.password_guard
+                try:
+                    ok = await guard.verify(password, settings.owner_password)
+                    reason = "Wrong password."
+                except auth.TooManyAttemptsError as exc:
+                    ok, reason = False, exc.detail
+                if not ok:
                     return _page(
                         "Connect an AI agent",
                         _consent_form(
-                            request_id,
-                            client,
-                            params,
-                            needs_password=True,
-                            password_configured=bool(expected),
-                            error=reason,
+                            request_id, cookie, client, params, needs_password=True, error=reason
                         ),
                         403,
                     )
@@ -403,27 +421,24 @@ def client_name(info_json: str) -> str:
 
 def _consent_form(
     request_id: str,
+    csrf: str,
     client: OAuthClientInformationFull,
     params: AuthorizationParams,
     *,
     needs_password: bool,
-    password_configured: bool,
     error: str,
 ) -> str:
     e = html.escape
     name = e(client.client_name or "An unnamed agent")
     host = e(params.redirect_uri.host or str(params.redirect_uri))
     wants_write = WRITE in (params.scopes or SCOPES)
-    pw = ""
-    if needs_password:
-        pw = (
-            '<label class="field-label" for="pw">Owner password</label>'
-            '<input class="field" id="pw" name="password" type="password" '
-            'autocomplete="current-password" autofocus required>'
-            if password_configured
-            else '<p class="warn">Approving from another device needs '
-            "<code>TOBOX_OWNER_PASSWORD</code> set on the server.</p>"
-        )
+    pw = (
+        '<label class="field-label" for="pw">Owner password</label>'
+        '<input class="field" id="pw" name="password" type="password" '
+        'autocomplete="current-password" autofocus required>'
+        if needs_password
+        else ""
+    )
     write = (
         '<label class="check"><input type="checkbox" name="allow_write" value="1" checked> '
         "<span><b>Make changes</b>: add and edit plan items, work logs, initiatives, and "
@@ -436,8 +451,9 @@ def _consent_form(
 <p class="lede"><b>{name}</b> wants to access your Tobox.</p>
 <p class="muted">After approving you'll be sent back to <code>{host}</code>.
 Only approve agents you started yourself.</p>
-<form method="post" action="/oauth/consent">
+<form method="post" action="{CONSENT_PATH}">
   <input type="hidden" name="request" value="{e(request_id)}">
+  <input type="hidden" name="csrf" value="{e(csrf)}">
   <fieldset>
     <legend class="field-label">It will be able to</legend>
     <label class="check"><input type="checkbox" checked disabled>
@@ -459,11 +475,10 @@ def _page(title: str, body: str, status: int = 200) -> HTMLResponse:
 <title>{html.escape(title)} · Tobox</title>
 <style>
   :root {{ color-scheme: light dark; --canvas:#f8fafc; --surface:#fff; --ink:#0f172a;
-    --muted:#64748b; --line:#e2e8f0; --accent:#0f172a; --on-accent:#fff; --danger:#e11d48;
-    --warn-bg:#fffbeb; --warn-ink:#92400e; }}
+    --muted:#64748b; --line:#e2e8f0; --accent:#0f172a; --on-accent:#fff; --danger:#e11d48; }}
   @media (prefers-color-scheme: dark) {{ :root {{ --canvas:#0b1120; --surface:#0f172a;
     --ink:#f1f5f9; --muted:#94a3b8; --line:#1e293b; --accent:#f8fafc; --on-accent:#0f172a;
-    --danger:#fb7185; --warn-bg:#451a03; --warn-ink:#fcd34d; }} }}
+    --danger:#fb7185; }} }}
   * {{ box-sizing: border-box; }}
   body {{ margin:0; min-height:100vh; display:grid; place-items:center; padding:16px;
     background:var(--canvas); color:var(--ink);
@@ -484,8 +499,6 @@ def _page(title: str, body: str, status: int = 200) -> HTMLResponse:
     background:transparent; color:var(--ink); font:inherit; font-weight:600; cursor:pointer; }}
   .btn.primary {{ background:var(--accent); color:var(--on-accent); border-color:var(--accent); }}
   .error {{ color:var(--danger); margin:0 0 8px; }}
-  .warn {{ background:var(--warn-bg); color:var(--warn-ink); padding:8px 12px;
-    border-radius:8px; }}
   code {{ font-size:13px; }}
 </style></head>
 <body><main><h1>{html.escape(title)}</h1>{body}</main></body></html>"""

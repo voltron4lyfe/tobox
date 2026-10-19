@@ -18,7 +18,8 @@ export function PreferencesSync() {
   useEffect(() => {
     if (!data || data.timezone !== null || zoneSent.current) return
     zoneSent.current = true
-    save.mutate({ ...data, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    save.mutate((current) => (current.timezone === null ? { ...current, timezone } : current))
   }, [data, save])
 
   return null
@@ -30,7 +31,7 @@ export function useSetTheme() {
   const onError = useErrorToast()
   return (theme: Theme) => {
     if (!data) applyTheme(theme)
-    else save.mutate({ ...data, theme }, { onError })
+    else save.mutate((current) => ({ ...current, theme }), { onError })
   }
 }
 

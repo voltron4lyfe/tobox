@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Response
 from sqlalchemy import delete
 
-from tobox.agents.oauth import LOOPBACK, active_agents, client_name
+from tobox.agents.oauth import active_agents, client_name
 from tobox.api.deps import SessionDep
 from tobox.config import Settings
 from tobox.errors import NotFoundError
@@ -44,12 +44,7 @@ def disconnect_agent(client_id: str, session: SessionDep) -> Response:
 
 @router.get("/mcp", response_model=McpInfo)
 def mcp_info(request: Request) -> McpInfo:
-    """Where agents connect, and whether approving them needs the owner password."""
+    """Where agents connect, and whether approving them can need the owner password."""
     settings: Settings = request.app.state.settings
     base = settings.public_url.rstrip("/")
-    local = request.client is not None and request.client.host in LOOPBACK
-    return McpInfo(
-        url=f"{base}/mcp",
-        issuer=base,
-        password_required=bool(settings.owner_password) or not local,
-    )
+    return McpInfo(url=f"{base}/mcp", issuer=base, password_required=bool(settings.owner_password))
