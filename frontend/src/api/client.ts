@@ -30,6 +30,13 @@ export type NotificationLogEntry = Schemas['NotificationLogOut']
 export type Agent = Schemas['AgentOut']
 export type McpInfo = Schemas['McpInfo']
 export type SessionInfo = Schemas['SessionInfo']
+export type Role = Schemas['RoleOut']
+export type RoleUpdate = Schemas['RoleUpdate']
+export type Routine = Schemas['RoutineOut']
+export type RoutineCreate = Schemas['RoutineCreate']
+export type RoutineUpdate = Schemas['RoutineUpdate']
+export type RoleMetrics = Schemas['RoleMetrics']
+export type RoutineMetrics = Schemas['RoutineMetrics']
 
 // The header marks requests as Tobox's own; the server refuses /api writes without it (CSRF).
 export const api = createClient<paths>({ baseUrl: '', headers: { 'X-Requested-With': 'tobox' } })

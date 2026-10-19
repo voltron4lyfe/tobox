@@ -10,6 +10,7 @@ const initiative = (id: number, title: string, quadrant = 2): Initiative => ({
   description: '',
   status: 'active',
   sort_order: 0,
+  role_id: null,
   created_at: '',
   updated_at: '',
 })
@@ -25,6 +26,7 @@ const item = (id: number, initiativeId: number, title: string, highlight = false
   is_highlight: highlight,
   done: false,
   carried_from_id: null,
+  routine_id: null,
   logged_minutes: 0,
 })
 

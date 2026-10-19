@@ -103,6 +103,156 @@
         }
       }
     },
+    "/api/roles": {
+      "get": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "List Roles",
+        "operationId": "list_roles_api_roles_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RoleOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Roles Api Roles Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "Create Role",
+        "operationId": "create_role_api_roles_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/roles/{role_id}": {
+      "patch": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "Update Role",
+        "operationId": "update_role_api_roles__role_id__patch",
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "Delete Role",
+        "description": "Its initiatives stay, without a role.",
+        "operationId": "delete_role_api_roles__role_id__delete",
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/initiatives": {
       "get": {
         "tags": [
@@ -254,6 +404,178 @@
             "schema": {
               "type": "integer",
               "title": "Initiative Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/routines": {
+      "get": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "List Routines",
+        "operationId": "list_routines_api_routines_get",
+        "parameters": [
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Inactive"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoutineOut"
+                  },
+                  "title": "Response List Routines Api Routines Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Create Routine",
+        "operationId": "create_routine_api_routines_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutineCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/routines/{routine_id}": {
+      "patch": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Update Routine",
+        "operationId": "update_routine_api_routines__routine_id__patch",
+        "parameters": [
+          {
+            "name": "routine_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Routine Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutineUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Delete Routine",
+        "description": "Items already planned from it stay on their days.",
+        "operationId": "delete_routine_api_routines__routine_id__delete",
+        "parameters": [
+          {
+            "name": "routine_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Routine Id"
             }
           }
         ],
@@ -592,6 +914,60 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CarryForwardRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/days/{day}/routines": {
+      "post": {
+        "tags": [
+          "days"
+        ],
+        "summary": "Plan Routines",
+        "description": "Add routines to the day's plan: every one due that day, or just `routine_ids`.",
+        "operationId": "plan_routines_api_days__day__routines_post",
+        "parameters": [
+          {
+            "name": "day",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Day"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanRoutinesRequest"
               }
             }
           }
@@ -1484,6 +1860,14 @@
           },
           "summary": {
             "$ref": "#/components/schemas/DaySummary"
+          },
+          "routines_due": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineOut"
+            },
+            "type": "array",
+            "title": "Routines Due",
+            "description": "Routines due this day that aren't on the plan yet."
           }
         },
         "type": "object",
@@ -1496,7 +1880,8 @@
           "reviewed_at",
           "items",
           "logs",
-          "summary"
+          "summary",
+          "routines_due"
         ],
         "title": "DayOut"
       },
@@ -1787,6 +2172,17 @@
           "status": {
             "$ref": "#/components/schemas/InitiativeStatus",
             "default": "active"
+          },
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
           }
         },
         "type": "object",
@@ -1868,6 +2264,17 @@
             "type": "integer",
             "title": "Sort Order"
           },
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -1887,6 +2294,7 @@
           "quadrant",
           "status",
           "sort_order",
+          "role_id",
           "created_at",
           "updated_at"
         ],
@@ -1961,6 +2369,18 @@
               }
             ],
             "title": "Sort Order"
+          },
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id",
+            "description": "null clears the role"
           }
         },
         "type": "object",
@@ -2175,6 +2595,20 @@
             },
             "type": "array",
             "title": "Initiatives"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/RoleMetrics"
+            },
+            "type": "array",
+            "title": "Roles"
+          },
+          "routines": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineMetrics"
+            },
+            "type": "array",
+            "title": "Routines"
           }
         },
         "type": "object",
@@ -2183,7 +2617,9 @@
           "end",
           "summary",
           "days",
-          "initiatives"
+          "initiatives",
+          "roles",
+          "routines"
         ],
         "title": "MetricsOut"
       },
@@ -2455,6 +2891,27 @@
         ],
         "title": "NotificationTestOut"
       },
+      "PlanRoutinesRequest": {
+        "properties": {
+          "routine_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routine Ids",
+            "description": "Routines to plan (default: all due that day)."
+          }
+        },
+        "type": "object",
+        "title": "PlanRoutinesRequest"
+      },
       "PlannedItemCreate": {
         "properties": {
           "initiative_id": {
@@ -2536,6 +2993,17 @@
             ],
             "title": "Carried From Id"
           },
+          "routine_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routine Id"
+          },
           "logged_minutes": {
             "type": "integer",
             "title": "Logged Minutes"
@@ -2553,6 +3021,7 @@
           "is_highlight",
           "done",
           "carried_from_id",
+          "routine_id",
           "logged_minutes"
         ],
         "title": "PlannedItemOut"
@@ -2806,6 +3275,375 @@
           "ids"
         ],
         "title": "ReorderRequest"
+      },
+      "RoleCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "RoleCreate"
+      },
+      "RoleMetrics": {
+        "properties": {
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id",
+            "description": "null: initiatives without a role"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "actual_minutes": {
+            "type": "integer",
+            "title": "Actual Minutes"
+          },
+          "planned_minutes": {
+            "type": "integer",
+            "title": "Planned Minutes"
+          },
+          "days_worked": {
+            "type": "integer",
+            "title": "Days Worked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role_id",
+          "name",
+          "actual_minutes",
+          "planned_minutes",
+          "days_worked"
+        ],
+        "title": "RoleMetrics",
+        "description": "Time per role. Initiatives count under their current role."
+      },
+      "RoleOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "sort_order": {
+            "type": "integer",
+            "title": "Sort Order"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "sort_order"
+        ],
+        "title": "RoleOut"
+      },
+      "RoleUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "sort_order": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort Order"
+          }
+        },
+        "type": "object",
+        "title": "RoleUpdate"
+      },
+      "RoutineCreate": {
+        "properties": {
+          "initiative_id": {
+            "type": "integer",
+            "title": "Initiative Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Title",
+            "default": ""
+          },
+          "estimate_minutes": {
+            "type": "integer",
+            "maximum": 1440.0,
+            "minimum": 0.0,
+            "title": "Estimate Minutes",
+            "default": 30
+          },
+          "weekdays": {
+            "items": {
+              "type": "integer",
+              "maximum": 6.0,
+              "minimum": 0.0,
+              "description": "0 = Monday \u2026 6 = Sunday"
+            },
+            "type": "array",
+            "maxItems": 7,
+            "minItems": 1,
+            "title": "Weekdays"
+          },
+          "every_weeks": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Every Weeks",
+            "description": "1 = every week, 2 = every other\u2026",
+            "default": 1
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date",
+            "description": "Default: today"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "initiative_id",
+          "weekdays"
+        ],
+        "title": "RoutineCreate"
+      },
+      "RoutineMetrics": {
+        "properties": {
+          "routine_id": {
+            "type": "integer",
+            "title": "Routine Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "initiative_id": {
+            "type": "integer",
+            "title": "Initiative Id"
+          },
+          "quadrant": {
+            "type": "integer",
+            "title": "Quadrant"
+          },
+          "due_days": {
+            "type": "integer",
+            "title": "Due Days"
+          },
+          "planned_days": {
+            "type": "integer",
+            "title": "Planned Days"
+          },
+          "kept_days": {
+            "type": "integer",
+            "title": "Kept Days",
+            "description": "Days its planned copy was done or had time logged"
+          }
+        },
+        "type": "object",
+        "required": [
+          "routine_id",
+          "title",
+          "initiative_id",
+          "quadrant",
+          "due_days",
+          "planned_days",
+          "kept_days"
+        ],
+        "title": "RoutineMetrics"
+      },
+      "RoutineOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "initiative_id": {
+            "type": "integer",
+            "title": "Initiative Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "estimate_minutes": {
+            "type": "integer",
+            "title": "Estimate Minutes"
+          },
+          "weekdays": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Weekdays"
+          },
+          "every_weeks": {
+            "type": "integer",
+            "title": "Every Weeks"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "initiative_id",
+          "title",
+          "estimate_minutes",
+          "weekdays",
+          "every_weeks",
+          "start_date",
+          "active"
+        ],
+        "title": "RoutineOut"
+      },
+      "RoutineUpdate": {
+        "properties": {
+          "initiative_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Initiative Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "estimate_minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1440.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimate Minutes"
+          },
+          "weekdays": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer",
+                  "maximum": 6.0,
+                  "minimum": 0.0,
+                  "description": "0 = Monday \u2026 6 = Sunday"
+                },
+                "type": "array",
+                "maxItems": 7,
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekdays"
+          },
+          "every_weeks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 12.0,
+                "minimum": 1.0,
+                "description": "1 = every week, 2 = every other\u2026"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Every Weeks"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "title": "RoutineUpdate"
       },
       "SessionInfo": {
         "properties": {

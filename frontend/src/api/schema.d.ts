@@ -43,6 +43,45 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/roles': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Roles */
+    get: operations['list_roles_api_roles_get']
+    put?: never
+    /** Create Role */
+    post: operations['create_role_api_roles_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/roles/{role_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * Delete Role
+     * @description Its initiatives stay, without a role.
+     */
+    delete: operations['delete_role_api_roles__role_id__delete']
+    options?: never
+    head?: never
+    /** Update Role */
+    patch: operations['update_role_api_roles__role_id__patch']
+    trace?: never
+  }
   '/api/initiatives': {
     parameters: {
       query?: never
@@ -77,6 +116,45 @@ export interface paths {
     head?: never
     /** Update Initiative */
     patch: operations['update_initiative_api_initiatives__initiative_id__patch']
+    trace?: never
+  }
+  '/api/routines': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Routines */
+    get: operations['list_routines_api_routines_get']
+    put?: never
+    /** Create Routine */
+    post: operations['create_routine_api_routines_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/routines/{routine_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * Delete Routine
+     * @description Items already planned from it stay on their days.
+     */
+    delete: operations['delete_routine_api_routines__routine_id__delete']
+    options?: never
+    head?: never
+    /** Update Routine */
+    patch: operations['update_routine_api_routines__routine_id__patch']
     trace?: never
   }
   '/api/days/{day}': {
@@ -163,6 +241,26 @@ export interface paths {
      * @description Copy the day's unfinished items onto another day (skipping ones already carried).
      */
     post: operations['carry_forward_api_days__day__carry_forward_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/days/{day}/routines': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Plan Routines
+     * @description Add routines to the day's plan: every one due that day, or just `routine_ids`.
+     */
+    post: operations['plan_routines_api_days__day__routines_post']
     delete?: never
     options?: never
     head?: never
@@ -556,6 +654,11 @@ export interface components {
       /** Logs */
       logs: components['schemas']['LogEntryOut'][]
       summary: components['schemas']['DaySummary']
+      /**
+       * Routines Due
+       * @description Routines due this day that aren't on the plan yet.
+       */
+      routines_due: components['schemas']['RoutineOut'][]
     }
     /** DaySummary */
     DaySummary: {
@@ -680,6 +783,8 @@ export interface components {
       quadrant: number
       /** @default active */
       status?: components['schemas']['InitiativeStatus']
+      /** Role Id */
+      role_id?: number | null
     }
     /** InitiativeMetrics */
     InitiativeMetrics: {
@@ -712,6 +817,8 @@ export interface components {
       status: components['schemas']['InitiativeStatus']
       /** Sort Order */
       sort_order: number
+      /** Role Id */
+      role_id: number | null
       /**
        * Created At
        * Format: date-time
@@ -739,6 +846,11 @@ export interface components {
       status?: components['schemas']['InitiativeStatus'] | null
       /** Sort Order */
       sort_order?: number | null
+      /**
+       * Role Id
+       * @description null clears the role
+       */
+      role_id?: number | null
     }
     /**
      * LogEntryCreate
@@ -828,6 +940,10 @@ export interface components {
       days: components['schemas']['DayMetrics'][]
       /** Initiatives */
       initiatives: components['schemas']['InitiativeMetrics'][]
+      /** Roles */
+      roles: components['schemas']['RoleMetrics'][]
+      /** Routines */
+      routines: components['schemas']['RoutineMetrics'][]
     }
     /** MetricsSummary */
     MetricsSummary: {
@@ -986,6 +1102,14 @@ export interface components {
       /** Deliveries */
       deliveries: components['schemas']['Delivery'][]
     }
+    /** PlanRoutinesRequest */
+    PlanRoutinesRequest: {
+      /**
+       * Routine Ids
+       * @description Routines to plan (default: all due that day).
+       */
+      routine_ids?: number[] | null
+    }
     /** PlannedItemCreate */
     PlannedItemCreate: {
       /** Initiative Id */
@@ -1031,6 +1155,8 @@ export interface components {
       done: boolean
       /** Carried From Id */
       carried_from_id: number | null
+      /** Routine Id */
+      routine_id: number | null
       /** Logged Minutes */
       logged_minutes: number
     }
@@ -1165,6 +1291,138 @@ export interface components {
     ReorderRequest: {
       /** Ids */
       ids: number[]
+    }
+    /** RoleCreate */
+    RoleCreate: {
+      /** Name */
+      name: string
+    }
+    /**
+     * RoleMetrics
+     * @description Time per role. Initiatives count under their current role.
+     */
+    RoleMetrics: {
+      /**
+       * Role Id
+       * @description null: initiatives without a role
+       */
+      role_id: number | null
+      /** Name */
+      name: string
+      /** Actual Minutes */
+      actual_minutes: number
+      /** Planned Minutes */
+      planned_minutes: number
+      /** Days Worked */
+      days_worked: number
+    }
+    /** RoleOut */
+    RoleOut: {
+      /** Id */
+      id: number
+      /** Name */
+      name: string
+      /** Sort Order */
+      sort_order: number
+    }
+    /** RoleUpdate */
+    RoleUpdate: {
+      /** Name */
+      name?: string | null
+      /** Sort Order */
+      sort_order?: number | null
+    }
+    /** RoutineCreate */
+    RoutineCreate: {
+      /** Initiative Id */
+      initiative_id: number
+      /**
+       * Title
+       * @default
+       */
+      title?: string
+      /**
+       * Estimate Minutes
+       * @default 30
+       */
+      estimate_minutes?: number
+      /** Weekdays */
+      weekdays: number[]
+      /**
+       * Every Weeks
+       * @description 1 = every week, 2 = every other…
+       * @default 1
+       */
+      every_weeks?: number
+      /**
+       * Start Date
+       * @description Default: today
+       */
+      start_date?: string | null
+      /**
+       * Active
+       * @default true
+       */
+      active?: boolean
+    }
+    /** RoutineMetrics */
+    RoutineMetrics: {
+      /** Routine Id */
+      routine_id: number
+      /** Title */
+      title: string
+      /** Initiative Id */
+      initiative_id: number
+      /** Quadrant */
+      quadrant: number
+      /** Due Days */
+      due_days: number
+      /** Planned Days */
+      planned_days: number
+      /**
+       * Kept Days
+       * @description Days its planned copy was done or had time logged
+       */
+      kept_days: number
+    }
+    /** RoutineOut */
+    RoutineOut: {
+      /** Id */
+      id: number
+      /** Initiative Id */
+      initiative_id: number
+      /** Title */
+      title: string
+      /** Estimate Minutes */
+      estimate_minutes: number
+      /** Weekdays */
+      weekdays: number[]
+      /** Every Weeks */
+      every_weeks: number
+      /**
+       * Start Date
+       * Format: date
+       */
+      start_date: string
+      /** Active */
+      active: boolean
+    }
+    /** RoutineUpdate */
+    RoutineUpdate: {
+      /** Initiative Id */
+      initiative_id?: number | null
+      /** Title */
+      title?: string | null
+      /** Estimate Minutes */
+      estimate_minutes?: number | null
+      /** Weekdays */
+      weekdays?: number[] | null
+      /** Every Weeks */
+      every_weeks?: number | null
+      /** Start Date */
+      start_date?: string | null
+      /** Active */
+      active?: boolean | null
     }
     /** SessionInfo */
     SessionInfo: {
@@ -1334,6 +1592,123 @@ export interface operations {
       }
     }
   }
+  list_roles_api_roles_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RoleOut'][]
+        }
+      }
+    }
+  }
+  create_role_api_roles_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RoleCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RoleOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_role_api_roles__role_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        role_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  update_role_api_roles__role_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        role_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RoleUpdate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RoleOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   list_initiatives_api_initiatives_get: {
     parameters: {
       query?: {
@@ -1449,6 +1824,134 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['InitiativeOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_routines_api_routines_get: {
+    parameters: {
+      query?: {
+        include_inactive?: boolean
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RoutineOut'][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  create_routine_api_routines_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RoutineCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RoutineOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_routine_api_routines__routine_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        routine_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  update_routine_api_routines__routine_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        routine_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RoutineUpdate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RoutineOut']
         }
       }
       /** @description Validation Error */
@@ -1676,6 +2179,41 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['CarryForwardRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DayOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  plan_routines_api_days__day__routines_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        day: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PlanRoutinesRequest']
       }
     }
     responses: {

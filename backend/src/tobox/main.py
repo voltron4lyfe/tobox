@@ -11,7 +11,16 @@ from sqlalchemy.orm import Session
 
 from tobox import agents, auth
 from tobox.api import agents as agents_api
-from tobox.api import days, initiatives, metrics, notifications, preferences, session
+from tobox.api import (
+    days,
+    initiatives,
+    metrics,
+    notifications,
+    preferences,
+    roles,
+    routines,
+    session,
+)
 from tobox.config import Settings, get_settings
 from tobox.db import SessionLocal
 from tobox.errors import DomainError
@@ -66,7 +75,16 @@ def create_app(
 
     api.include_router(session.router)
     owner = [Depends(auth.require_owner)]
-    for router in (initiatives, days, metrics, preferences, notifications, agents_api):
+    for router in (
+        roles,
+        initiatives,
+        routines,
+        days,
+        metrics,
+        preferences,
+        notifications,
+        agents_api,
+    ):
         api.include_router(router.router, dependencies=owner)
     app.include_router(api)
     background.append(agents.mount(app, sessions, settings))

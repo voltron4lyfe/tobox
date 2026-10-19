@@ -5,10 +5,11 @@ tobox/
 ├── backend/                 FastAPI + SQLAlchemy 2 + Alembic, managed by uv
 │   ├── src/tobox/
 │   │   ├── main.py          app factory; all routes under /api
-│   │   ├── models.py        ORM models (Initiative, Day, PlannedItem, LogEntry, app state,
-│   │   │                    push subscriptions, notification log, OAuth clients/grants/tokens)
+│   │   ├── models.py        ORM models (Role, Initiative, Routine, Day, PlannedItem, LogEntry,
+│   │   │                    app state, push subscriptions, notification log, OAuth clients…)
 │   │   ├── schemas.py       Pydantic request/response models = the HTTP contract
 │   │   ├── metrics.py       pure metric functions (no DB/HTTP)
+│   │   ├── recurrence.py    pure routine schedule rules (is_due, due_dates)
 │   │   ├── services.py      assembles a Day response from rows
 │   │   ├── ops.py           domain operations shared by the REST API and MCP tools
 │   │   ├── errors.py        DomainError → 404/409/422 (HTTP) or tool errors (MCP)
@@ -17,8 +18,8 @@ tobox/
 │   │   ├── notify/          events (pure rules) → dispatch → channels (web push, Discord);
 │   │   │                    scheduler loop that fires reminders
 │   │   ├── agents/          MCP server (tools + prompts) and its OAuth 2.1 authorization server
-│   │   ├── api/             routers: session (sign-in), initiatives, days (+items, logs),
-│   │   │                    metrics, preferences, notifications, agents
+│   │   ├── api/             routers: session (sign-in), roles, initiatives, routines, days
+│   │   │                    (+items, logs, routines), metrics, preferences, notifications, agents
 │   │   ├── seed.py          demo data (make seed)
 │   │   └── openapi.py       prints the OpenAPI schema (make api-types)
 │   ├── migrations/          Alembic (render_as_batch for SQLite)

@@ -8,6 +8,9 @@ Quadrants follow Covey's time-management matrix:
 
 Planned items and log entries snapshot the initiative's quadrant at creation
 time so history stays accurate if an initiative is later re-classified.
+
+Roles (Covey: parent, professional, health…) group initiatives; routines are recurring items
+(a weekly class, soccer practice) that daily planning suggests on the days they're due.
 """
 
 import enum
@@ -45,6 +48,30 @@ class UTCDateTime(TypeDecorator[datetime]):
         return value
 
 
+class Weekdays(TypeDecorator[list[int]]):
+    """A set of weekdays (Python numbering, 0 = Monday) stored as "0,2,4"."""
+
+    impl = String(20)
+    cache_ok = True
+
+    def process_bind_param(self, value: list[int] | None, dialect: Dialect) -> str | None:  # noqa: ARG002
+        return ",".join(str(d) for d in sorted(set(value))) if value is not None else None
+
+    def process_result_value(self, value: str | None, dialect: Dialect) -> list[int] | None:  # noqa: ARG002
+        return [int(d) for d in value.split(",") if d] if value is not None else None
+
+
+class Role(Base):
+    """An area of life that initiatives serve (Covey's roles): Parent, Professional, Health…"""
+
+    __tablename__ = "roles"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(60))
+    sort_order: Mapped[int] = mapped_column(default=0)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
 class InitiativeStatus(enum.StrEnum):
     active = "active"
     paused = "paused"
@@ -62,6 +89,9 @@ class Initiative(Base):
     quadrant: Mapped[int]
     status: Mapped[InitiativeStatus] = mapped_column(String(16), default=InitiativeStatus.active)
     sort_order: Mapped[int] = mapped_column(default=0)
+    role_id: Mapped[int | None] = mapped_column(
+        ForeignKey("roles.id", ondelete="SET NULL"), default=None
+    )
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, onupdate=utcnow)
 
@@ -100,6 +130,34 @@ class PlannedItem(Base):
     carried_from_id: Mapped[int | None] = mapped_column(
         ForeignKey("planned_items.id", ondelete="SET NULL"), default=None
     )
+    routine_id: Mapped[int | None] = mapped_column(
+        ForeignKey("routines.id", ondelete="SET NULL"), default=None
+    )
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+    initiative: Mapped[Initiative] = relationship(lazy="joined")
+
+
+class Routine(Base):
+    """Something that recurs on set weekdays, every `every_weeks` weeks from `start_date`.
+
+    It isn't planned automatically: on a due day the plan offers it, so the ranked six stay a
+    choice. A planned copy keeps `routine_id`, which is how adherence is measured.
+    """
+
+    __tablename__ = "routines"
+    __table_args__ = (
+        CheckConstraint("every_weeks BETWEEN 1 AND 12", name="ck_routine_every_weeks"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    initiative_id: Mapped[int] = mapped_column(ForeignKey("initiatives.id", ondelete="CASCADE"))
+    title: Mapped[str] = mapped_column(String(300))
+    estimate_minutes: Mapped[int] = mapped_column(default=30)
+    weekdays: Mapped[list[int]] = mapped_column(Weekdays())
+    every_weeks: Mapped[int] = mapped_column(default=1)
+    start_date: Mapped[date] = mapped_column(Date)
+    active: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
     initiative: Mapped[Initiative] = relationship(lazy="joined")

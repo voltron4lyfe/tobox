@@ -9,11 +9,11 @@ did the thing that mattered, and over weeks, whether urgency is crowding out imp
 
 | Ritual | Page | What happens |
 |---|---|---|
-| Once in a while | **Initiatives** | Place everything competing for your time on the Q1–Q4 matrix |
-| Morning | **Plan** | ≤ 6 ranked items; #1 is your **Highlight**. Nudges if no Q2 work is planned |
+| Once in a while | **Initiatives** | Place everything competing for your time on the Q1–Q4 matrix, grouped by **role** (Parent, Professional, Health…), and set up **routines** that recur |
+| Morning | **Plan** | ≤ 6 ranked items; #1 is your **Highlight**. Offers the routines due today. Nudges if no Q2 work is planned |
 | During the day | **Track** | Quick-log work: `drafted intro #book 45m` |
 | Evening | **Review** | Verdict on the Highlight, planned vs. actual by quadrant, rating, reflection, carry-forward |
-| Any time | **History** | Hit rate, streaks, Q2 share, plan adherence, verdict calendar, trends |
+| Any time | **History** | Hit rate, streaks, Q2 share, plan adherence, verdict calendar, balance across roles, routines kept, trends |
 
 Settings holds the theme (light, dark, or match the system), reminder times, and where
 reminders go (browser notifications, Discord). AI agents (Claude, ChatGPT, Cursor, …) can connect

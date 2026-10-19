@@ -11,10 +11,32 @@ Quadrant = Annotated[int, Field(ge=1, le=4)]
 Minutes = Annotated[int, Field(ge=0, le=24 * 60)]
 Title = Annotated[str, Field(max_length=300)]
 QuadrantMinutes = dict[str, int]  # keys "1".."4"
+Weekday = Annotated[int, Field(ge=0, le=6, description="0 = Monday … 6 = Sunday")]
 
 
 class ORMModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- Roles -------------------------------------------------------------------
+
+
+RoleName = Annotated[str, Field(min_length=1, max_length=60)]
+
+
+class RoleCreate(BaseModel):
+    name: RoleName
+
+
+class RoleUpdate(BaseModel):
+    name: RoleName | None = None
+    sort_order: int | None = None
+
+
+class RoleOut(ORMModel):
+    id: int
+    name: str
+    sort_order: int
 
 
 # --- Initiatives -------------------------------------------------------------
@@ -25,6 +47,7 @@ class InitiativeCreate(BaseModel):
     description: str = ""
     quadrant: Quadrant
     status: InitiativeStatus = InitiativeStatus.active
+    role_id: int | None = None
 
 
 class InitiativeUpdate(BaseModel):
@@ -33,6 +56,7 @@ class InitiativeUpdate(BaseModel):
     quadrant: Quadrant | None = None
     status: InitiativeStatus | None = None
     sort_order: int | None = None
+    role_id: int | None = Field(default=None, description="null clears the role")
 
 
 class InitiativeOut(ORMModel):
@@ -42,6 +66,7 @@ class InitiativeOut(ORMModel):
     quadrant: int
     status: InitiativeStatus
     sort_order: int
+    role_id: int | None
     created_at: datetime
     updated_at: datetime
 
@@ -75,7 +100,52 @@ class PlannedItemOut(ORMModel):
     is_highlight: bool
     done: bool
     carried_from_id: int | None
+    routine_id: int | None
     logged_minutes: int
+
+
+# --- Routines -------------------------------------------------------------------
+
+
+Weekdays = Annotated[list[Weekday], Field(min_length=1, max_length=7)]
+EveryWeeks = Annotated[int, Field(ge=1, le=12, description="1 = every week, 2 = every other…")]
+
+
+class RoutineCreate(BaseModel):
+    initiative_id: int
+    title: Title = ""
+    estimate_minutes: Minutes = 30
+    weekdays: Weekdays
+    every_weeks: EveryWeeks = 1
+    start_date: date | None = Field(default=None, description="Default: today")
+    active: bool = True
+
+
+class RoutineUpdate(BaseModel):
+    initiative_id: int | None = None
+    title: Title | None = None
+    estimate_minutes: Minutes | None = None
+    weekdays: Weekdays | None = None
+    every_weeks: EveryWeeks | None = None
+    start_date: date | None = None
+    active: bool | None = None
+
+
+class RoutineOut(ORMModel):
+    id: int
+    initiative_id: int
+    title: str
+    estimate_minutes: int
+    weekdays: list[int]
+    every_weeks: int
+    start_date: date
+    active: bool
+
+
+class PlanRoutinesRequest(BaseModel):
+    routine_ids: list[int] | None = Field(
+        default=None, description="Routines to plan (default: all due that day)."
+    )
 
 
 class ReorderRequest(BaseModel):
@@ -171,6 +241,9 @@ class DayOut(BaseModel):
     items: list[PlannedItemOut]
     logs: list[LogEntryOut]
     summary: DaySummary
+    routines_due: list[RoutineOut] = Field(
+        description="Routines due this day that aren't on the plan yet."
+    )
 
 
 # --- Metrics -------------------------------------------------------------------------
@@ -190,6 +263,26 @@ class InitiativeMetrics(BaseModel):
     planned_minutes: int
     days_worked: int
     highlight_days: int
+
+
+class RoleMetrics(BaseModel):
+    """Time per role. Initiatives count under their current role."""
+
+    role_id: int | None = Field(description="null: initiatives without a role")
+    name: str
+    actual_minutes: int
+    planned_minutes: int
+    days_worked: int
+
+
+class RoutineMetrics(BaseModel):
+    routine_id: int
+    title: str
+    initiative_id: int
+    quadrant: int
+    due_days: int
+    planned_days: int
+    kept_days: int = Field(description="Days its planned copy was done or had time logged")
 
 
 class MetricsSummary(BaseModel):
@@ -215,6 +308,8 @@ class MetricsOut(BaseModel):
     summary: MetricsSummary
     days: list[DayMetrics]
     initiatives: list[InitiativeMetrics]
+    roles: list[RoleMetrics]
+    routines: list[RoutineMetrics]
 
 
 # --- Preferences -------------------------------------------------------------------
@@ -228,7 +323,6 @@ class Defaulted(BaseModel):
 
 Theme = Literal["system", "light", "dark"]
 ClockTime = Annotated[str, Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$", examples=["08:30"])]
-Weekday = Annotated[int, Field(ge=0, le=6, description="0 = Monday … 6 = Sunday")]
 EventKind = Literal["plan_reminder", "highlight_nudge", "review_reminder"]
 
 

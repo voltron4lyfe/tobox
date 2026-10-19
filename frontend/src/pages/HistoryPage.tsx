@@ -176,6 +176,15 @@ function HistoryBody({ data, onOpenDay }: { data: Metrics; onOpenDay: (date: str
         </section>
       </div>
 
+      {(data.roles.length > 0 || data.routines.length > 0) && (
+        <div
+          className={`grid gap-4 ${data.roles.length > 0 && data.routines.length > 0 ? 'lg:grid-cols-2' : ''}`}
+        >
+          {data.roles.length > 0 && <RoleBalance data={data} />}
+          {data.routines.length > 0 && <RoutinesKept data={data} />}
+        </div>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-2">
         <InitiativesTable data={data} />
         <DaysTable days={tracked} onOpenDay={onOpenDay} />
@@ -237,6 +246,85 @@ function mixInsight(data: Metrics): string {
   if ((s.actual_by_quadrant['4'] ?? 0) / Math.max(1, s.total_minutes) > 0.15)
     parts.push('More than 15% of your time went to Q4.')
   return parts.join(' ') || 'Log more work to see how your time compares with your plans.'
+}
+
+function RoleBalance({ data }: { data: Metrics }) {
+  const total = data.roles.reduce((sum, r) => sum + r.actual_minutes, 0)
+  const max = Math.max(1, ...data.roles.map((r) => Math.max(r.actual_minutes, r.planned_minutes)))
+  const neglected = data.roles.filter((r) => r.role_id !== null && r.actual_minutes === 0)
+  return (
+    <section className="card overflow-hidden" aria-label="Time by role">
+      <h2 className="eyebrow border-b border-line-soft px-4 py-2.5">Balance across roles</h2>
+      <ul className="divide-y divide-line-soft">
+        {data.roles.map((r) => (
+          <li key={r.role_id ?? 'none'} className="px-4 py-2.5">
+            <div className="flex items-baseline justify-between gap-3 text-sm">
+              <span className={`truncate font-medium ${r.role_id === null ? 'text-ink-3' : ''}`}>
+                {r.name}
+              </span>
+              <span className="tabular shrink-0 text-xs text-ink-2">
+                {formatMinutes(r.actual_minutes)}
+                <span className="text-ink-4">
+                  {' '}
+                  · {formatPercent(total ? r.actual_minutes / total : 0)} · {r.days_worked}d
+                </span>
+              </span>
+            </div>
+            <div className="relative mt-1.5 h-1.5 overflow-hidden rounded-full bg-sunken">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-accent-solid"
+                style={{ width: `${(r.actual_minutes / max) * 100}%` }}
+              />
+            </div>
+            {r.planned_minutes > 0 && (
+              <p className="tabular mt-1 text-[11px] text-ink-4">
+                {formatMinutes(r.planned_minutes)} planned
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+      {neglected.length > 0 && (
+        <p className="border-t border-line-soft bg-warning-soft px-4 py-2.5 text-xs text-warning-ink">
+          Nothing logged for {neglected.map((r) => r.name).join(', ')} in this range. Is that
+          deliberate?
+        </p>
+      )}
+    </section>
+  )
+}
+
+function RoutinesKept({ data }: { data: Metrics }) {
+  return (
+    <section className="card overflow-hidden" aria-label="Routines">
+      <h2 className="eyebrow border-b border-line-soft px-4 py-2.5">Routines kept</h2>
+      <ul className="divide-y divide-line-soft">
+        {data.routines.map((r) => {
+          const rate = r.due_days ? Math.min(1, r.kept_days / r.due_days) : 0
+          return (
+            <li key={r.routine_id} className="px-4 py-2.5">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="flex min-w-0 items-center gap-2">
+                  <QuadrantChip q={r.quadrant} />
+                  <span className="truncate font-medium">{r.title}</span>
+                </span>
+                <span className="tabular shrink-0 text-xs text-ink-2">
+                  {r.kept_days} of {r.due_days}
+                  <span className="text-ink-4"> · {r.planned_days} planned</span>
+                </span>
+              </div>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-sunken">
+                <div
+                  className={`h-full rounded-full ${quadrantMeta(r.quadrant).dot}`}
+                  style={{ width: `${rate * 100}%` }}
+                />
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
+  )
 }
 
 function InitiativesTable({ data }: { data: Metrics }) {

@@ -7,15 +7,16 @@ They raise `tobox.errors` exceptions, never HTTP ones, so any transport can map 
 from collections import defaultdict
 from datetime import UTC, date, datetime, timedelta
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
-from tobox import services
+from tobox import prefs, services
 from tobox.config import get_settings
 from tobox.db import insert_if_missing
 from tobox.errors import ConflictError, InvalidError, get_or_404
 from tobox.metrics import summarize_range
-from tobox.models import Day, Initiative, InitiativeStatus, LogEntry, PlannedItem
+from tobox.models import Day, Initiative, InitiativeStatus, LogEntry, PlannedItem, Role, Routine
+from tobox.recurrence import due_dates
 from tobox.schemas import (
     CarryForwardRequest,
     DayMetrics,
@@ -29,9 +30,47 @@ from tobox.schemas import (
     MetricsOut,
     PlannedItemCreate,
     PlannedItemUpdate,
+    RoleCreate,
+    RoleMetrics,
+    RoleUpdate,
+    RoutineCreate,
+    RoutineMetrics,
+    RoutineUpdate,
 )
 
 MAX_RANGE_DAYS = 3 * 366
+
+
+# --- Roles -----------------------------------------------------------------------
+
+
+def list_roles(session: Session) -> list[Role]:
+    return list(session.scalars(select(Role).order_by(Role.sort_order, Role.id)))
+
+
+def create_role(session: Session, body: RoleCreate) -> Role:
+    max_order = session.scalar(select(func.max(Role.sort_order)))
+    role = Role(name=body.name.strip(), sort_order=(max_order or 0) + 1)
+    session.add(role)
+    session.commit()
+    return role
+
+
+def update_role(session: Session, role_id: int, body: RoleUpdate) -> Role:
+    role = get_or_404(session, Role, role_id)
+    for key, value in body.model_dump(exclude_unset=True, exclude_none=True).items():
+        setattr(role, key, value.strip() if key == "name" else value)
+    session.commit()
+    return role
+
+
+def delete_role(session: Session, role_id: int) -> None:
+    """Its initiatives stay, without a role."""
+    role = get_or_404(session, Role, role_id)
+    session.execute(update(Initiative).where(Initiative.role_id == role_id).values(role_id=None))
+    session.delete(role)
+    session.commit()
+    session.expire_all()
 
 
 # --- Initiatives -----------------------------------------------------------------
@@ -48,6 +87,8 @@ def create_initiative(session: Session, body: InitiativeCreate) -> Initiative:
     max_order = session.scalar(
         select(func.max(Initiative.sort_order)).where(Initiative.quadrant == body.quadrant)
     )
+    if body.role_id is not None:
+        get_or_404(session, Role, body.role_id)
     initiative = Initiative(**body.model_dump(), sort_order=(max_order or 0) + 1)
     session.add(initiative)
     session.commit()
@@ -56,7 +97,12 @@ def create_initiative(session: Session, body: InitiativeCreate) -> Initiative:
 
 def update_initiative(session: Session, initiative_id: int, body: InitiativeUpdate) -> Initiative:
     initiative = get_or_404(session, Initiative, initiative_id)
-    for key, value in body.model_dump(exclude_unset=True).items():
+    data = body.model_dump(exclude_unset=True)
+    if data.get("role_id") is not None:
+        get_or_404(session, Role, data["role_id"])
+    for key, value in data.items():
+        if value is None and key != "role_id":
+            continue
         setattr(initiative, key, value)
     session.commit()
     return initiative
@@ -208,6 +254,7 @@ def carry_forward(session: Session, day: date, body: CarryForwardRequest) -> Day
             estimate_minutes=item.estimate_minutes,
             rank=len(target),
             carried_from_id=item.id,
+            routine_id=item.routine_id,
         )
         session.add(copy)
         target.append(copy)
@@ -215,6 +262,86 @@ def carry_forward(session: Session, day: date, body: CarryForwardRequest) -> Day
         services.set_highlight(target, target[0])
     session.commit()
     return services.build_day(session, body.to_date)
+
+
+# --- Routines ------------------------------------------------------------------------
+
+
+def list_routines(session: Session, include_inactive: bool = True) -> list[Routine]:
+    stmt = select(Routine).order_by(Routine.id)
+    if not include_inactive:
+        stmt = stmt.where(Routine.active)
+    return list(session.scalars(stmt))
+
+
+def create_routine(session: Session, body: RoutineCreate) -> Routine:
+    initiative = get_or_404(session, Initiative, body.initiative_id)
+    routine = Routine(
+        initiative_id=initiative.id,
+        title=body.title.strip() or initiative.title,
+        estimate_minutes=body.estimate_minutes,
+        weekdays=body.weekdays,
+        every_weeks=body.every_weeks,
+        start_date=body.start_date or prefs.local_today(session),
+        active=body.active,
+    )
+    session.add(routine)
+    session.commit()
+    return routine
+
+
+def update_routine(session: Session, routine_id: int, body: RoutineUpdate) -> Routine:
+    routine = get_or_404(session, Routine, routine_id)
+    data = body.model_dump(exclude_unset=True, exclude_none=True)
+    if "initiative_id" in data:
+        get_or_404(session, Initiative, data["initiative_id"])
+    if "title" in data:
+        data["title"] = data["title"].strip() or routine.initiative.title
+    for key, value in data.items():
+        setattr(routine, key, value)
+    session.commit()
+    session.refresh(routine)
+    return routine
+
+
+def delete_routine(session: Session, routine_id: int) -> None:
+    """Items already planned from it stay on their days."""
+    routine = get_or_404(session, Routine, routine_id)
+    session.execute(
+        update(PlannedItem).where(PlannedItem.routine_id == routine_id).values(routine_id=None)
+    )
+    session.delete(routine)
+    session.commit()
+    session.expire_all()
+
+
+def plan_routines(session: Session, day: date, routine_ids: list[int] | None) -> DayOut:
+    """Add routines to a day's plan: all that are due, or the given ones (due or not).
+    Routines already on the plan are skipped."""
+    items = services.day_items(session, day)
+    if routine_ids is None:
+        chosen = services.due_routines(session, day, items)
+    else:
+        planned = {i.routine_id for i in items}
+        chosen = [get_or_404(session, Routine, rid) for rid in dict.fromkeys(routine_ids)]
+        chosen = [r for r in chosen if r.id not in planned]
+    _ensure_capacity(items, len(chosen))
+    for routine in chosen:
+        item = PlannedItem(
+            date=day,
+            initiative_id=routine.initiative_id,
+            title=routine.title,
+            quadrant=routine.initiative.quadrant,
+            estimate_minutes=routine.estimate_minutes,
+            rank=len(items),
+            routine_id=routine.id,
+        )
+        session.add(item)
+        items.append(item)
+    if items and not any(i.is_highlight for i in items):
+        services.set_highlight(items, items[0])
+    session.commit()
+    return services.build_day(session, day)
 
 
 # --- Log entries -------------------------------------------------------------------
@@ -318,7 +445,87 @@ def metrics(session: Session, start: date, end: date) -> MetricsOut:
         summary=summarize_range([(d.date, d, d.rating) for d in days]),
         days=days,
         initiatives=_initiative_metrics(session, items_by_day, logs_by_day),
+        roles=_role_metrics(session, items_by_day, logs_by_day),
+        routines=_routine_metrics(session, start, end, items_by_day, logs_by_day),
     )
+
+
+def _role_metrics(
+    session: Session,
+    items_by_day: dict[date, list[PlannedItem]],
+    logs_by_day: dict[date, list[LogEntry]],
+) -> list[RoleMetrics]:
+    """Every role (so a neglected one shows as zero), plus a no-role bucket if it has time."""
+    role_of: dict[int, int | None] = dict(
+        session.execute(select(Initiative.id, Initiative.role_id)).all()
+    )
+    actual: dict[int | None, int] = defaultdict(int)
+    planned: dict[int | None, int] = defaultdict(int)
+    worked_days: dict[int | None, set[date]] = defaultdict(set)
+    for day, logs in logs_by_day.items():
+        for log in logs:
+            role = role_of.get(log.initiative_id)
+            actual[role] += log.minutes
+            worked_days[role].add(day)
+    for items in items_by_day.values():
+        for item in items:
+            planned[role_of.get(item.initiative_id)] += item.estimate_minutes
+
+    def row(role_id: int | None, name: str) -> RoleMetrics:
+        return RoleMetrics(
+            role_id=role_id,
+            name=name,
+            actual_minutes=actual[role_id],
+            planned_minutes=planned[role_id],
+            days_worked=len(worked_days[role_id]),
+        )
+
+    out = [row(r.id, r.name) for r in list_roles(session)]
+    if actual[None] or planned[None]:
+        out.append(row(None, "No role"))
+    return out
+
+
+def _routine_metrics(
+    session: Session,
+    start: date,
+    end: date,
+    items_by_day: dict[date, list[PlannedItem]],
+    logs_by_day: dict[date, list[LogEntry]],
+) -> list[RoutineMetrics]:
+    """For each routine: due days in range, days it was planned, and days it was kept."""
+    logged: dict[int, int] = defaultdict(int)
+    for logs in logs_by_day.values():
+        for log in logs:
+            if log.planned_item_id is not None:
+                logged[log.planned_item_id] += log.minutes
+    planned_days: dict[int, set[date]] = defaultdict(set)
+    kept_days: dict[int, set[date]] = defaultdict(set)
+    for day, items in items_by_day.items():
+        for item in items:
+            if item.routine_id is None:
+                continue
+            planned_days[item.routine_id].add(day)
+            if item.done or logged[item.id] > 0:
+                kept_days[item.routine_id].add(day)
+
+    out = []
+    for r in list_routines(session):
+        due = sum(1 for _ in due_dates(r.weekdays, r.every_weeks, r.start_date, start, end))
+        if not (r.active or planned_days[r.id]):
+            continue
+        out.append(
+            RoutineMetrics(
+                routine_id=r.id,
+                title=r.title,
+                initiative_id=r.initiative_id,
+                quadrant=r.initiative.quadrant,
+                due_days=due,
+                planned_days=len(planned_days[r.id]),
+                kept_days=len(kept_days[r.id]),
+            )
+        )
+    return out
 
 
 def _initiative_metrics(

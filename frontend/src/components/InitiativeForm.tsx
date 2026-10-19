@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import type { Initiative, InitiativeStatus } from '../api/client'
+import type { Initiative, InitiativeStatus, Role } from '../api/client'
 import { QUADRANTS, quadrantMeta, type Quadrant } from '../lib/quadrants'
 import { Kbd } from './Kbd'
 
@@ -9,6 +9,7 @@ export interface InitiativeDraft {
   description: string
   quadrant: Quadrant
   status: InitiativeStatus
+  role_id: number | null
 }
 
 const STATUSES: InitiativeStatus[] = ['active', 'paused', 'done', 'archived']
@@ -16,6 +17,8 @@ const STATUSES: InitiativeStatus[] = ['active', 'paused', 'done', 'archived']
 export function InitiativeForm({
   initial,
   defaultQuadrant = 2,
+  defaultRoleId = null,
+  roles,
   onSubmit,
   onCancel,
   submitLabel,
@@ -23,6 +26,8 @@ export function InitiativeForm({
 }: {
   initial?: Initiative
   defaultQuadrant?: Quadrant
+  defaultRoleId?: number | null
+  roles: Role[]
   onSubmit: (draft: InitiativeDraft) => void
   onCancel: () => void
   submitLabel?: string
@@ -33,6 +38,7 @@ export function InitiativeForm({
     description: initial?.description ?? '',
     quadrant: (initial?.quadrant as Quadrant | undefined) ?? defaultQuadrant,
     status: initial?.status ?? 'active',
+    role_id: initial ? initial.role_id : defaultRoleId,
   })
   const set = <K extends keyof InitiativeDraft>(k: K, v: InitiativeDraft[K]) =>
     setDraft((d) => ({ ...d, [k]: v }))
@@ -98,6 +104,24 @@ export function InitiativeForm({
           })}
         </div>
       </fieldset>
+
+      {roles.length > 0 && (
+        <label className="block space-y-1.5">
+          <span className="text-xs font-medium text-ink-3">Role</span>
+          <select
+            className="field"
+            value={draft.role_id ?? ''}
+            onChange={(e) => set('role_id', e.target.value ? Number(e.target.value) : null)}
+          >
+            <option value="">No role</option>
+            {roles.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-ink-3">Why it matters (optional)</span>

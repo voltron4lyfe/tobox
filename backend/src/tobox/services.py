@@ -6,8 +6,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from tobox.metrics import ItemFacts, LogFacts, logged_minutes_by_item, summarize_day
-from tobox.models import Day, LogEntry, PlannedItem
-from tobox.schemas import DayOut, DaySummary, LogEntryOut, PlannedItemOut
+from tobox.models import Day, Initiative, InitiativeStatus, LogEntry, PlannedItem, Routine
+from tobox.recurrence import is_due
+from tobox.schemas import DayOut, DaySummary, LogEntryOut, PlannedItemOut, RoutineOut
 
 
 def day_items(session: Session, day: date) -> list[PlannedItem]:
@@ -22,6 +23,22 @@ def day_items(session: Session, day: date) -> list[PlannedItem]:
 def day_logs(session: Session, day: date) -> list[LogEntry]:
     stmt = select(LogEntry).where(LogEntry.date == day).order_by(LogEntry.created_at, LogEntry.id)
     return list(session.scalars(stmt))
+
+
+def due_routines(session: Session, day: date, items: list[PlannedItem]) -> list[Routine]:
+    """Active routines of active initiatives that are due on `day` and not yet planned."""
+    planned = {i.routine_id for i in items}
+    stmt = (
+        select(Routine)
+        .join(Initiative)
+        .where(Routine.active, Initiative.status == InitiativeStatus.active)
+        .order_by(Routine.id)
+    )
+    return [
+        r
+        for r in session.scalars(stmt)
+        if r.id not in planned and is_due(r.weekdays, r.every_weeks, r.start_date, day)
+    ]
 
 
 def item_facts(item: PlannedItem) -> ItemFacts:
@@ -64,6 +81,7 @@ def build_day(session: Session, day: date) -> DayOut:
         items=[item_out(i, by_item.get(i.id, 0)) for i in items],
         logs=[LogEntryOut.model_validate(lg) for lg in logs],
         summary=summarize(items, logs),
+        routines_due=[RoutineOut.model_validate(r) for r in due_routines(session, day, items)],
     )
 
 

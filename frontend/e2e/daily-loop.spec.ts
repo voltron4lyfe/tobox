@@ -133,3 +133,60 @@ test('reminder settings save', async ({ page }) => {
   )
   await expect(page.getByRole('region', { name: 'AI agents' })).toContainText('/mcp')
 })
+
+test('roles group initiatives and routines are offered on the plan', async ({ page }) => {
+  await page.goto('/initiatives')
+  await expect(page.getByRole('region', { name: 'Q2 Effectiveness' })).toContainText(
+    'Write the book',
+  )
+
+  // ⇧R: manage roles; start from a suggestion.
+  await page.keyboard.press('Shift+R')
+  const roles = page.getByRole('dialog', { name: 'Roles' })
+  await roles.getByRole('button', { name: 'Parent' }).click()
+  await expect(roles.getByLabel('Rename Parent')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(roles).toBeHidden()
+
+  await page.keyboard.press('n')
+  const form = page.getByRole('dialog')
+  await form.getByLabel('Title').fill("Kids' soccer")
+  await form.getByLabel('Role').selectOption('Parent')
+  await page.keyboard.press('Alt+1')
+  await page.keyboard.press('ControlOrMeta+Enter')
+  await expect(form).toBeHidden()
+
+  // f cycles the role filter: All roles → Parent.
+  await page.keyboard.press('f')
+  const filter = page.getByRole('radiogroup', { name: 'Filter by role' })
+  await expect(filter.getByRole('radio', { name: 'Parent' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  )
+  await expect(page.getByRole('region', { name: 'Q1 Necessity' })).toContainText("Kids' soccer")
+  await expect(page.getByRole('region', { name: 'Q2 Effectiveness' })).not.toContainText(
+    'Write the book',
+  )
+
+  // r: a routine that's due every day, so it's due today.
+  await page.keyboard.press('r')
+  const routine = page.getByRole('dialog', { name: 'New routine' })
+  await page.keyboard.type('soccer')
+  await page.keyboard.press('Enter')
+  await routine.getByLabel('What').fill('Soccer practice')
+  for (const day of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']) {
+    await routine.getByRole('button', { name: day }).click()
+  }
+  await page.keyboard.press('ControlOrMeta+Enter')
+  await expect(routine).toBeHidden()
+  await expect(page.getByRole('region', { name: 'Routines' })).toContainText('Every day')
+
+  // The plan offers it; r adds it.
+  await page.keyboard.press('g')
+  await page.keyboard.press('p')
+  const due = page.getByRole('region', { name: 'Routines due' })
+  await expect(due).toContainText('Soccer practice')
+  await page.keyboard.press('r')
+  await expect(page.getByRole('region', { name: "Today's plan" })).toContainText('Soccer practice')
+  await expect(due).toBeHidden()
+})

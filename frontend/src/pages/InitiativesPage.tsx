@@ -1,24 +1,39 @@
-import { Pause, Plus } from 'lucide-react'
+import { Pause, Plus, Repeat, Users } from 'lucide-react'
 import { Fragment, useMemo, useState } from 'react'
 
-import type { Initiative } from '../api/client'
+import type { Initiative, Role, Routine } from '../api/client'
 import {
   useCreateInitiative,
+  useCreateRoutine,
   useDeleteInitiative,
+  useDeleteRoutine,
   useInitiatives,
+  useRoles,
+  useRoutines,
   useUpdateInitiative,
+  useUpdateRoutine,
 } from '../api/hooks'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { InitiativeForm } from '../components/InitiativeForm'
 import { Kbd } from '../components/Kbd'
 import { Modal } from '../components/Modal'
 import { ErrorBlock, LoadingBlock, PageHeader } from '../components/PageHeader'
+import { RolesEditor } from '../components/RolesEditor'
+import { RoutineForm } from '../components/RoutineForm'
+import { RoutineList } from '../components/RoutineList'
 import { useErrorToast } from '../components/Toast'
 import { useHotkeys } from '../lib/hotkeys'
 import { QUADRANTS, quadrantMeta, type Quadrant } from '../lib/quadrants'
 import { useListNav, useScrollSelected } from '../lib/useListNav'
 
 type Editing = { mode: 'new'; quadrant: Quadrant } | { mode: 'edit'; initiative: Initiative } | null
+type EditingRoutine = { mode: 'new' } | { mode: 'edit'; routine: Routine } | null
+/** Which initiatives to show: every role, one role, or those without a role. */
+type RoleFilter = 'all' | 'none' | number
+
+function matchesRole(filter: RoleFilter, roleId: number | null) {
+  return filter === 'all' || (filter === 'none' ? roleId === null : roleId === filter)
+}
 
 export function InitiativesPage() {
   const [showInactive, setShowInactive] = useState(false)
@@ -27,15 +42,45 @@ export function InitiativesPage() {
   const update = useUpdateInitiative()
   const remove = useDeleteInitiative()
   const onError = useErrorToast()
+  const roles = useRoles()
+  const roleList = useMemo(() => roles.data ?? [], [roles.data])
+  const routines = useRoutines()
+  const createRoutine = useCreateRoutine()
+  const updateRoutine = useUpdateRoutine()
+  const deleteRoutine = useDeleteRoutine()
   const [editing, setEditing] = useState<Editing>(null)
   const [deleting, setDeleting] = useState<Initiative | null>(null)
-  const modalOpen = editing !== null || deleting !== null
+  const [editingRoutine, setEditingRoutine] = useState<EditingRoutine>(null)
+  const [deletingRoutine, setDeletingRoutine] = useState<Routine | null>(null)
+  const [rolesOpen, setRolesOpen] = useState(false)
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
+  const modalOpen =
+    editing !== null ||
+    deleting !== null ||
+    editingRoutine !== null ||
+    deletingRoutine !== null ||
+    rolesOpen
+  const filters: RoleFilter[] = ['all', ...roleList.map((r) => r.id), 'none']
+  const roleName = (id: number | null) => roleList.find((r) => r.id === id)?.name
 
   const visible = useMemo(
     () =>
-      (data ?? []).filter((i) => showInactive || i.status === 'active' || i.status === 'paused'),
-    [data, showInactive],
+      (data ?? []).filter(
+        (i) =>
+          (showInactive || i.status === 'active' || i.status === 'paused') &&
+          matchesRole(roleFilter, i.role_id),
+      ),
+    [data, showInactive, roleFilter],
   )
+  const visibleRoutines = useMemo(
+    () =>
+      (routines.data ?? []).filter((r) => {
+        const initiative = data?.find((i) => i.id === r.initiative_id)
+        return matchesRole(roleFilter, initiative?.role_id ?? null)
+      }),
+    [routines.data, data, roleFilter],
+  )
+  const activeInitiatives = useMemo(() => (data ?? []).filter((i) => i.status === 'active'), [data])
   // Flattened in quadrant order so j/k walks the matrix Q1 → Q4.
   const flat = useMemo(
     () => QUADRANTS.flatMap((q) => visible.filter((i) => i.quadrant === q)),
@@ -104,6 +149,28 @@ export function InitiativesPage() {
       enabled: !modalOpen,
       handler: () => setShowInactive((s) => !s),
     },
+    {
+      keys: 'f',
+      description: 'Next role filter',
+      group: 'Initiatives',
+      enabled: !modalOpen && roleList.length > 0,
+      handler: () =>
+        setRoleFilter((f) => filters[(filters.indexOf(f) + 1) % filters.length] ?? 'all'),
+    },
+    {
+      keys: 'shift+r',
+      description: 'Manage roles',
+      group: 'Initiatives',
+      enabled: !modalOpen,
+      handler: () => setRolesOpen(true),
+    },
+    {
+      keys: 'r',
+      description: 'New routine',
+      group: 'Initiatives',
+      enabled: !modalOpen,
+      handler: () => setEditingRoutine({ mode: 'new' }),
+    },
   ])
 
   return (
@@ -123,6 +190,9 @@ export function InitiativesPage() {
               />
               Show inactive <Kbd keys="v" />
             </label>
+            <button type="button" className="btn-outline" onClick={() => setRolesOpen(true)}>
+              <Users className="size-4" /> Roles <Kbd keys="shift+r" className="opacity-60" />
+            </button>
             <button
               type="button"
               className="btn-primary"
@@ -140,6 +210,14 @@ export function InitiativesPage() {
         <ErrorBlock error={error} />
       ) : (
         <div>
+          {roleList.length > 0 && (
+            <RoleFilterBar
+              roles={roleList}
+              value={roleFilter}
+              onChange={setRoleFilter}
+              hasUnassigned={(data ?? []).some((i) => i.role_id === null)}
+            />
+          )}
           {/* Matrix with axis labels on desktop; a single column of quadrants on mobile. */}
           <div className="grid gap-3 md:grid-cols-[1.25rem_1fr_1fr]">
             <span className="hidden md:block" />
@@ -160,6 +238,7 @@ export function InitiativesPage() {
                   onSelect={setSelected}
                   onAdd={() => setEditing({ mode: 'new', quadrant: q })}
                   onEdit={(i) => setEditing({ mode: 'edit', initiative: i })}
+                  roleName={roleFilter === 'all' ? roleName : () => undefined}
                 />
               </Fragment>
             ))}
@@ -169,8 +248,43 @@ export function InitiativesPage() {
               <Kbd keys="j" /> <Kbd keys="k" /> select · <Kbd keys="1" />–<Kbd keys="4" /> move
               quadrant · <Kbd keys="e" /> edit · <Kbd keys="p" /> pause · <Kbd keys="x" /> done ·{' '}
               <Kbd keys="a" /> archive
+              {roleList.length > 0 && (
+                <>
+                  {' '}
+                  · <Kbd keys="f" /> filter by role
+                </>
+              )}
             </p>
           )}
+
+          <section aria-label="Routines" className="card mt-6 p-4">
+            <div className="mb-1 flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <h2 className="flex items-center gap-2 text-sm font-semibold">
+                  <Repeat className="size-4 text-accent" /> Routines
+                </h2>
+                <p className="mt-0.5 text-xs text-ink-3">
+                  Things that recur. Each is offered on your plan on the days it’s due; you choose
+                  whether it makes the six.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn-outline"
+                onClick={() => setEditingRoutine({ mode: 'new' })}
+              >
+                <Plus className="size-4" /> New routine <Kbd keys="r" className="opacity-60" />
+              </button>
+            </div>
+            <RoutineList
+              routines={visibleRoutines}
+              initiatives={data ?? []}
+              onAdd={() => setEditingRoutine({ mode: 'new' })}
+              onEdit={(r) => setEditingRoutine({ mode: 'edit', routine: r })}
+              onDelete={setDeletingRoutine}
+              onToggle={(r, active) => updateRoutine.mutate({ id: r.id, active }, { onError })}
+            />
+          </section>
         </div>
       )}
 
@@ -184,6 +298,8 @@ export function InitiativesPage() {
             key={editing.mode === 'edit' ? editing.initiative.id : `new-${editing.quadrant}`}
             initial={editing.mode === 'edit' ? editing.initiative : undefined}
             defaultQuadrant={editing.mode === 'new' ? editing.quadrant : 2}
+            defaultRoleId={typeof roleFilter === 'number' ? roleFilter : null}
+            roles={roleList}
             busy={create.isPending || update.isPending}
             onCancel={() => setEditing(null)}
             onSubmit={(draft) => {
@@ -196,6 +312,41 @@ export function InitiativesPage() {
         )}
       </Modal>
 
+      <Modal
+        open={editingRoutine !== null}
+        onClose={() => setEditingRoutine(null)}
+        title={editingRoutine?.mode === 'edit' ? 'Edit routine' : 'New routine'}
+      >
+        {editingRoutine && (
+          <RoutineForm
+            key={editingRoutine.mode === 'edit' ? editingRoutine.routine.id : 'new'}
+            initial={editingRoutine.mode === 'edit' ? editingRoutine.routine : undefined}
+            initiatives={activeInitiatives}
+            busy={createRoutine.isPending || updateRoutine.isPending}
+            onCancel={() => setEditingRoutine(null)}
+            onSubmit={(draft) => {
+              const done = { onSuccess: () => setEditingRoutine(null), onError }
+              if (editingRoutine.mode === 'edit')
+                updateRoutine.mutate({ id: editingRoutine.routine.id, ...draft }, done)
+              else createRoutine.mutate(draft, done)
+            }}
+          />
+        )}
+      </Modal>
+
+      <Modal open={rolesOpen} onClose={() => setRolesOpen(false)} title="Roles">
+        {rolesOpen && <RolesEditor />}
+      </Modal>
+
+      <ConfirmDialog
+        open={deletingRoutine !== null}
+        title="Delete routine?"
+        message={`“${deletingRoutine?.title}” stops being offered. Days it was already planned on keep their items.`}
+        confirmLabel="Delete"
+        onConfirm={() => deletingRoutine && deleteRoutine.mutate(deletingRoutine.id, { onError })}
+        onClose={() => setDeletingRoutine(null)}
+      />
+
       <ConfirmDialog
         open={deleting !== null}
         title="Delete initiative?"
@@ -207,6 +358,51 @@ export function InitiativesPage() {
   )
 }
 
+function RoleFilterBar({
+  roles,
+  value,
+  onChange,
+  hasUnassigned,
+}: {
+  roles: Role[]
+  value: RoleFilter
+  onChange: (f: RoleFilter) => void
+  hasUnassigned: boolean
+}) {
+  const options: { value: RoleFilter; label: string }[] = [
+    { value: 'all', label: 'All roles' },
+    ...roles.map((r) => ({ value: r.id as RoleFilter, label: r.name })),
+    ...(hasUnassigned ? [{ value: 'none' as RoleFilter, label: 'No role' }] : []),
+  ]
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Filter by role"
+      className="mb-3 flex flex-wrap items-center gap-1.5"
+    >
+      {options.map((o) => {
+        const on = o.value === value
+        return (
+          <button
+            key={String(o.value)}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            onClick={() => onChange(o.value)}
+            className={`min-h-8 rounded-full border px-3 text-xs font-medium transition ${
+              on
+                ? 'border-accent-line bg-accent-soft text-accent-ink'
+                : 'border-line text-ink-3 hover:bg-subtle hover:text-ink-2'
+            }`}
+          >
+            {o.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 function QuadrantPanel({
   q,
   initiatives,
@@ -215,6 +411,7 @@ function QuadrantPanel({
   onSelect,
   onAdd,
   onEdit,
+  roleName,
 }: {
   q: Quadrant
   initiatives: Initiative[]
@@ -223,6 +420,7 @@ function QuadrantPanel({
   onSelect: (i: number) => void
   onAdd: () => void
   onEdit: (i: Initiative) => void
+  roleName: (roleId: number | null) => string | undefined
 }) {
   const meta = quadrantMeta(q)
   return (
@@ -271,6 +469,11 @@ function QuadrantPanel({
                     <span className="line-clamp-1 text-xs text-ink-3">{i.description}</span>
                   )}
                 </span>
+                {roleName(i.role_id) && (
+                  <span className="mt-0.5 shrink-0 rounded-full bg-sunken px-1.5 text-[11px] text-ink-3">
+                    {roleName(i.role_id)}
+                  </span>
+                )}
                 {i.status === 'paused' && <Pause className="mt-0.5 size-3.5 text-ink-4" />}
                 {(i.status === 'done' || i.status === 'archived') && (
                   <span className="text-[11px] text-ink-4">{i.status}</span>

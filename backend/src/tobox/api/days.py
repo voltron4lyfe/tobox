@@ -12,6 +12,7 @@ from tobox.schemas import (
     LogEntryUpdate,
     PlannedItemCreate,
     PlannedItemUpdate,
+    PlanRoutinesRequest,
     ReorderRequest,
 )
 
@@ -52,6 +53,12 @@ def reorder_items(day: date, body: ReorderRequest, session: SessionDep) -> DayOu
 def carry_forward(day: date, body: CarryForwardRequest, session: SessionDep) -> DayOut:
     """Copy the day's unfinished items onto another day (skipping ones already carried)."""
     return ops.carry_forward(session, day, body)
+
+
+@router.post("/days/{day}/routines", response_model=DayOut)
+def plan_routines(day: date, body: PlanRoutinesRequest, session: SessionDep) -> DayOut:
+    """Add routines to the day's plan: every one due that day, or just `routine_ids`."""
+    return ops.plan_routines(session, day, body.routine_ids)
 
 
 @router.post("/days/{day}/logs", response_model=DayOut, status_code=201)

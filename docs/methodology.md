@@ -24,12 +24,19 @@ Tobox combines the pieces that reinforce each other:
 
 1. **Initiatives on Covey's matrix (the map).** Everything competing for your time is an
    initiative placed in Q1–Q4. Q2 is visually emphasised and listed first when planning, because
-   it is the quadrant the morning rush neglects.
+   it is the quadrant the morning rush neglects. An initiative can belong to a **role** (Covey,
+   *First Things First*: the areas of life you serve, such as Parent, Professional, Health).
+   Roles are optional, and they answer the question the matrix can't: is one part of your life
+   quietly getting nothing?
 2. **Ivy Lee ranked plan with a Highlight (the morning ritual).** Each day gets up to **six**
    planned items, ranked. **Rank #1 is the Highlight**: the one thing that would make the day a
    win. Moving an item to the top makes it the Highlight; there is no separate concept to manage.
    The plan check nudges you when no Q2 work is planned, the Highlight is Q3/Q4, or estimates
-   exceed 8h.
+   exceed 8h. **Routines** (a weekly class, soccer practice, a standing 1:1) are recurring items
+   on chosen weekdays, every N weeks from a start date. On a due day the plan *offers* them; it
+   never adds them by itself, because the six slots are a choice. Planning one keeps a link to
+   the routine, so adherence can be measured. A routine is offered only while it and its
+   initiative are active, and not once it's on the day (including via carry-forward).
 3. **Lightweight logging (during the day).** Record what you actually worked on, against a
    planned item or any initiative, with a single quick-entry line (`drafted intro #book 45m`).
    Logs snapshot the initiative's quadrant so history stays honest if you re-classify later.
@@ -39,7 +46,8 @@ Tobox combines the pieces that reinforce each other:
    earlier carries (Mon → Tue → Wed), is skipped.
 5. **History (the feedback loop).** Hit rate, streaks, Q2 share, plan adherence, a verdict
    calendar, and an intended-vs-actual quadrant mix. These show over weeks whether urgency is
-   crowding out importance.
+   crowding out importance. Balance across roles flags any role with no logged time, and
+   "routines kept" shows which recurring commitments are holding.
 
 6. **Gentle reminders (optional).** At times you choose: plan your day (only if nothing is
    planned), a Highlight nudge in the afternoon (only if no time is logged on it), and the
@@ -80,6 +88,8 @@ tested). Minutes come from log entries; planned minutes come from item estimates
 | **Avg. plan adherence** | Mean of daily adherence over days with logged time |
 | **Plan accuracy** | Logged ÷ planned minutes, over days that had a plan |
 | **Intended vs. actual** | Quadrant mix of planned estimates vs. logged minutes |
+| **Time by role** | Logged and planned minutes, and days worked, per role, using each initiative's *current* role (unlike quadrants, roles aren't snapshotted). Every role is listed, so one with no time shows as zero; "No role" appears when unassigned initiatives have time |
+| **Routines kept** | Per routine: *due* days in the range (from its schedule), days it was *planned*, and days *kept*: its planned item was marked done or had time logged |
 
 ## Sources
 

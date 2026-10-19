@@ -5,6 +5,7 @@ import {
   Check,
   CornerDownRight,
   Plus,
+  Repeat,
   Star,
   Trash2,
 } from 'lucide-react'
@@ -18,6 +19,7 @@ import {
   useDay,
   useDeleteItem,
   useInitiatives,
+  usePlanRoutines,
   useReorderItems,
   useUpdateDay,
   useUpdateItem,
@@ -31,6 +33,7 @@ import { QuadrantChip, QuadrantMixBar } from '../components/Quadrant'
 import { useErrorToast } from '../components/Toast'
 import { addDays, formatDay, relativeDayLabel } from '../lib/dates'
 import { formatMinutes } from '../lib/duration'
+import { describeSchedule } from '../lib/weekdays'
 import { useHotkeys } from '../lib/hotkeys'
 import { QUADRANTS, quadrantMeta } from '../lib/quadrants'
 import { dayHref, useSelectedDate } from '../lib/useSelectedDate'
@@ -56,6 +59,7 @@ export function PlanPage() {
   const reorder = useReorderItems(date)
   const carry = useCarryForward(addDays(date, -1))
   const updateDay = useUpdateDay(date)
+  const planRoutines = usePlanRoutines(date)
 
   const items = useMemo(() => day.data?.items ?? [], [day.data])
   const full = items.length >= MAX_ITEMS
@@ -160,6 +164,13 @@ export function PlanPage() {
       description: 'Add to plan',
       group: 'Plan',
       handler: () => pickerRef.current?.focus(),
+    },
+    {
+      keys: 'r',
+      description: 'Add the routines due today',
+      group: 'Plan',
+      enabled: (day.data?.routines_due.length ?? 0) > 0,
+      handler: () => planRoutines.mutate(undefined, { onError }),
     },
     {
       keys: 'mod+enter',
@@ -313,6 +324,47 @@ export function PlanPage() {
 
         {/* Sources */}
         <aside className="space-y-4">
+          {d.routines_due.length > 0 && (
+            <section className="card p-4" aria-label="Routines due">
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="eyebrow">Recurring · {relativeDayLabel(date)}</h2>
+                <button
+                  type="button"
+                  className="btn-ghost px-2 py-1 text-xs"
+                  disabled={
+                    planRoutines.isPending || items.length + d.routines_due.length > MAX_ITEMS
+                  }
+                  onClick={() => planRoutines.mutate(undefined, { onError })}
+                >
+                  Add all <Kbd keys="r" />
+                </button>
+              </div>
+              <ul className="space-y-1">
+                {d.routines_due.map((r) => {
+                  const initiative = initiativesQuery.data?.find((i) => i.id === r.initiative_id)
+                  return (
+                    <li key={r.id}>
+                      <button
+                        type="button"
+                        disabled={full || planRoutines.isPending}
+                        onClick={() => planRoutines.mutate([r.id], { onError })}
+                        title={describeSchedule(r.weekdays, r.every_weeks)}
+                        className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-subtle disabled:opacity-50"
+                      >
+                        <Repeat className="size-3.5 shrink-0 text-ink-4" />
+                        <span className="flex-1 truncate">{r.title}</span>
+                        <span className="tabular text-xs text-ink-4">
+                          {formatMinutes(r.estimate_minutes)}
+                        </span>
+                        {initiative && <QuadrantChip q={initiative.quadrant} />}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          )}
+
           {leftovers.length > 0 && (
             <section className="card p-4">
               <div className="mb-2 flex items-center justify-between">
@@ -495,6 +547,11 @@ function PlanRow({
             </span>
           </span>
           {item.carried_from_id && <span title="Carried over from a previous day">↻ carried</span>}
+          {item.routine_id && !item.carried_from_id && (
+            <span title="From a routine" className="inline-flex items-center gap-1">
+              <Repeat className="size-3" /> routine
+            </span>
+          )}
         </div>
       </div>
 

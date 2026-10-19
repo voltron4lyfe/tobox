@@ -12,11 +12,16 @@ import {
   type PlannedItemCreate,
   type PlannedItemUpdate,
   type Preferences,
+  type RoleUpdate,
+  type RoutineCreate,
+  type RoutineUpdate,
   type SessionInfo,
 } from './client'
 
 export const keys = {
   session: ['session'] as const,
+  roles: ['roles'] as const,
+  routines: ['routines'] as const,
   initiatives: (includeArchived = false) => ['initiatives', { includeArchived }] as const,
   day: (date: string) => ['day', date] as const,
   metrics: (start: string, end: string) => ['metrics', start, end] as const,
@@ -36,6 +41,74 @@ export function useInitiatives(includeArchived = false) {
         api.GET('/api/initiatives', { params: { query: { include_archived: includeArchived } } }),
       ),
   })
+}
+
+// --- Roles and routines ---------------------------------------------------------------------
+
+export function useRoles() {
+  return useQuery({ queryKey: keys.roles, queryFn: () => unwrap(api.GET('/api/roles')) })
+}
+
+function useRoleMutation<V>(fn: (vars: V) => Promise<unknown>) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.roles })
+      // Deleting a role clears it from its initiatives; metrics group by role.
+      void qc.invalidateQueries({ queryKey: ['initiatives'] })
+      void qc.invalidateQueries({ queryKey: ['metrics'] })
+    },
+  })
+}
+
+export function useCreateRole() {
+  return useRoleMutation((name: string) => unwrap(api.POST('/api/roles', { body: { name } })))
+}
+
+export function useUpdateRole() {
+  return useRoleMutation(({ id, ...body }: RoleUpdate & { id: number }) =>
+    unwrap(api.PATCH('/api/roles/{role_id}', { params: { path: { role_id: id } }, body })),
+  )
+}
+
+export function useDeleteRole() {
+  return useRoleMutation((id: number) =>
+    unwrap(api.DELETE('/api/roles/{role_id}', { params: { path: { role_id: id } } })),
+  )
+}
+
+export function useRoutines() {
+  return useQuery({ queryKey: keys.routines, queryFn: () => unwrap(api.GET('/api/routines')) })
+}
+
+function useRoutineMutation<V>(fn: (vars: V) => Promise<unknown>) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.routines })
+      // Days list the routines due on them.
+      void qc.invalidateQueries({ queryKey: ['day'] })
+      void qc.invalidateQueries({ queryKey: ['metrics'] })
+    },
+  })
+}
+
+export function useCreateRoutine() {
+  return useRoutineMutation((body: RoutineCreate) => unwrap(api.POST('/api/routines', { body })))
+}
+
+export function useUpdateRoutine() {
+  return useRoutineMutation(({ id, ...body }: RoutineUpdate & { id: number }) =>
+    unwrap(api.PATCH('/api/routines/{routine_id}', { params: { path: { routine_id: id } }, body })),
+  )
+}
+
+export function useDeleteRoutine() {
+  return useRoutineMutation((id: number) =>
+    unwrap(api.DELETE('/api/routines/{routine_id}', { params: { path: { routine_id: id } } })),
+  )
 }
 
 export function useDay(date: string) {
@@ -140,6 +213,18 @@ export function useCarryForward(date: string) {
       api.POST('/api/days/{day}/carry-forward', {
         params: { path: { day: date } },
         body: { to_date: toDate, item_ids: itemIds ?? null },
+      }),
+    ),
+  )
+}
+
+/** Plan the routines due on `date` (or just `routineIds`). */
+export function usePlanRoutines(date: string) {
+  return useDayMutation((routineIds?: number[]) =>
+    unwrap(
+      api.POST('/api/days/{day}/routines', {
+        params: { path: { day: date } },
+        body: { routine_ids: routineIds ?? null },
       }),
     ),
   )

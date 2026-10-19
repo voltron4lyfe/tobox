@@ -18,16 +18,24 @@
 - Reminders (plan, Highlight nudge, review) via pluggable channels: browser push and Discord.
 - MCP server with OAuth 2.1 so AI agents can read, plan, log, and review.
 
+## v1.2 (done)
+
+- Owner sign-in, consent CSRF protection, Host/CSRF request guard.
+- **Roles** (Covey): optional role per initiative, role filter, balance across roles in History.
+- **Routines**: recurring items on chosen weekdays (every N weeks), offered on the plan when
+  due, with adherence ("routines kept") in History. Available to agents over MCP.
+
 ## Next candidates
 
 Roughly in priority order:
 
-1. **Weekly Big Rocks**: a weekly plan of 3–5 Q2 rocks that daily planning pulls from, plus a
-   weekly review comparing rocks with days.
-2. **Roles** (Covey): optional role per initiative (work, family, health…) and balance metrics.
+1. **Weekly Big Rocks**: a weekly plan of 3–5 Q2 rocks per role that daily planning pulls from,
+   plus a weekly review comparing rocks with days.
+2. **Calendar feed import**: subscribe to an iCal/ICS URL (e.g. Google Calendar's secret
+   address) and offer today's events alongside due routines, mapped to initiatives by rule.
 3. **Focus timer**: start/stop on a planned item to log minutes automatically.
 4. **PWA**: installable and offline-tolerant, with queued writes.
 5. **More notification channels**: email (SMTP), Slack, ntfy.
 6. **Export/backup**: JSON/CSV export and import.
-7. **Auth / multi-user**: if it ever needs to leave a private network.
+7. **Multi-user**: separate accounts, if it ever needs more than one owner.
 8. **Drag-and-drop reordering** on touch devices (today: star / arrows / keyboard).

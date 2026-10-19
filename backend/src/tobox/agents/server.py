@@ -32,6 +32,13 @@ from tobox.schemas import (
     MetricsOut,
     PlannedItemCreate,
     PlannedItemUpdate,
+    RoleCreate,
+    RoleOut,
+    RoleUpdate,
+    RoutineCreate,
+    RoutineOut,
+    RoutineUpdate,
+    Weekday,
 )
 
 INSTRUCTIONS = """\
@@ -40,7 +47,10 @@ Important/Urgent matrix.
 
 - Initiatives are ongoing efforts, each in a quadrant: 1 Necessity (urgent+important),
   2 Effectiveness (important, not urgent: the goal), 3 Distraction (urgent, not important),
-  4 Waste.
+  4 Waste. An initiative may belong to a role (Covey: Parent, Professional, Health…), the
+  areas of life the user wants to keep in balance.
+- Routines are recurring items (a weekly class, soccer practice) on set weekdays. They are
+  not planned automatically: get_day lists `routines_due`, and plan_routines adds them.
 - Each day has a ranked plan of at most 6 items; rank #1 is the Highlight, the one thing that
   would make the day a win. Log entries record work actually done (minutes), optionally linked
   to a planned item. An evening review adds a 1-5 rating and a reflection.
@@ -119,12 +129,24 @@ def build_server(
         )
 
     @server.tool(annotations=READ_ONLY)
+    def list_roles() -> list[RoleOut]:
+        """The user's roles (areas of life), in their order."""
+        return run(lambda s: [RoleOut.model_validate(r) for r in ops.list_roles(s)])
+
+    @server.tool(annotations=READ_ONLY)
+    def list_routines(include_inactive: bool = False) -> list[RoutineOut]:
+        """Recurring items: weekdays (0 = Monday), every N weeks from start_date."""
+        return run(
+            lambda s: [RoutineOut.model_validate(r) for r in ops.list_routines(s, include_inactive)]
+        )
+
+    @server.tool(annotations=READ_ONLY)
     def get_metrics(
         days: Annotated[int, Field(ge=1, le=366)] = 7,
         end: DateArg = None,
     ) -> MetricsOut:
         """Trends over the `days` ending on `end`: Highlight hit rate, streaks, Q2 share, plan
-        adherence, per-initiative time, and per-day summaries."""
+        adherence, time per initiative and per role, routine adherence, and per-day summaries."""
 
         def fn(s: Session) -> MetricsOut:
             last = day_of(s, end)
@@ -139,10 +161,13 @@ def build_server(
         title: Annotated[str, Field(min_length=1, max_length=200)],
         quadrant: Annotated[int, Field(ge=1, le=4)],
         description: str = "",
+        role_id: int | None = None,
     ) -> InitiativeOut:
-        """Create an initiative. Confirm the name and quadrant with the user first."""
+        """Create an initiative. Confirm the name, quadrant, and role with the user first."""
         need_write()
-        body = InitiativeCreate(title=title, quadrant=quadrant, description=description)
+        body = InitiativeCreate(
+            title=title, quadrant=quadrant, description=description, role_id=role_id
+        )
         return run(lambda s: InitiativeOut.model_validate(ops.create_initiative(s, body)))
 
     @server.tool(annotations=WRITES)
@@ -152,20 +177,109 @@ def build_server(
         description: str | None = None,
         quadrant: Annotated[int, Field(ge=1, le=4)] | None = None,
         status: Literal["active", "paused", "done", "archived"] | None = None,
+        role_id: int | None = None,
+        clear_role: bool = False,
     ) -> InitiativeOut:
-        """Rename, re-classify, or change the status of an initiative (archive instead of
-        deleting)."""
+        """Rename, re-classify, move to a role (or clear_role), or change the status of an
+        initiative (archive instead of deleting)."""
         need_write()
         fields = {
             "title": title,
             "description": description,
             "quadrant": quadrant,
             "status": status,
+            "role_id": role_id,
         }
         body = InitiativeUpdate(**{k: v for k, v in fields.items() if v is not None})
+        if clear_role:
+            body.role_id = None
         return run(
             lambda s: InitiativeOut.model_validate(ops.update_initiative(s, initiative_id, body))
         )
+
+    # --- Roles -------------------------------------------------------------------------
+
+    @server.tool(annotations=WRITES)
+    def create_role(name: Annotated[str, Field(min_length=1, max_length=60)]) -> RoleOut:
+        """Create a role (e.g. Parent, Professional, Health). Confirm with the user first."""
+        need_write()
+        return run(lambda s: RoleOut.model_validate(ops.create_role(s, RoleCreate(name=name))))
+
+    @server.tool(annotations=WRITES)
+    def update_role(
+        role_id: int,
+        name: Annotated[str, Field(min_length=1, max_length=60)] | None = None,
+        sort_order: int | None = None,
+    ) -> RoleOut:
+        """Rename or reorder a role."""
+        need_write()
+        body = RoleUpdate(name=name, sort_order=sort_order)
+        return run(lambda s: RoleOut.model_validate(ops.update_role(s, role_id, body)))
+
+    @server.tool(annotations=DESTRUCTIVE)
+    def delete_role(role_id: int) -> str:
+        """Delete a role. Its initiatives stay, without a role."""
+        need_write()
+        run(lambda s: ops.delete_role(s, role_id))
+        return "deleted"
+
+    # --- Routines ------------------------------------------------------------------------
+
+    @server.tool(annotations=WRITES)
+    def create_routine(
+        initiative_id: int,
+        weekdays: Annotated[list[Weekday], Field(min_length=1, max_length=7)],
+        title: str = "",
+        estimate_minutes: Annotated[int, Field(ge=0, le=1440)] = 30,
+        every_weeks: Annotated[int, Field(ge=1, le=12)] = 1,
+        start_date: DateArg = None,
+    ) -> RoutineOut:
+        """Create a recurring item on `weekdays` (0 = Monday) every `every_weeks` weeks from
+        `start_date` (default today). Confirm the schedule with the user first."""
+        need_write()
+
+        def fn(s: Session) -> RoutineOut:
+            body = RoutineCreate(
+                initiative_id=initiative_id,
+                title=title,
+                estimate_minutes=estimate_minutes,
+                weekdays=weekdays,
+                every_weeks=every_weeks,
+                start_date=day_of(s, start_date),
+            )
+            return RoutineOut.model_validate(ops.create_routine(s, body))
+
+        return run(fn)
+
+    @server.tool(annotations=WRITES)
+    def update_routine(
+        routine_id: int,
+        title: str | None = None,
+        estimate_minutes: Annotated[int, Field(ge=0, le=1440)] | None = None,
+        weekdays: Annotated[list[Weekday], Field(min_length=1, max_length=7)] | None = None,
+        every_weeks: Annotated[int, Field(ge=1, le=12)] | None = None,
+        active: bool | None = None,
+        initiative_id: int | None = None,
+    ) -> RoutineOut:
+        """Change a routine's schedule or details, or pause it (active=false)."""
+        need_write()
+        fields = {
+            "title": title,
+            "estimate_minutes": estimate_minutes,
+            "weekdays": weekdays,
+            "every_weeks": every_weeks,
+            "active": active,
+            "initiative_id": initiative_id,
+        }
+        body = RoutineUpdate(**{k: v for k, v in fields.items() if v is not None})
+        return run(lambda s: RoutineOut.model_validate(ops.update_routine(s, routine_id, body)))
+
+    @server.tool(annotations=DESTRUCTIVE)
+    def delete_routine(routine_id: int) -> str:
+        """Delete a routine. Items already planned from it stay on their days."""
+        need_write()
+        run(lambda s: ops.delete_routine(s, routine_id))
+        return "deleted"
 
     # --- Plan --------------------------------------------------------------------------
 
@@ -207,6 +321,13 @@ def build_server(
         }
         body = PlannedItemUpdate(**{k: v for k, v in fields.items() if v is not None})
         return run(lambda s: ops.update_item(s, item_id, body))
+
+    @server.tool(annotations=WRITES)
+    def plan_routines(routine_ids: list[int] | None = None, date: DateArg = None) -> DayOut:
+        """Add routines to a day's plan: all that are due (get_day's routines_due), or the
+        given ones. Counts toward the 6-item limit."""
+        need_write()
+        return run(lambda s: ops.plan_routines(s, day_of(s, date), routine_ids))
 
     @server.tool(annotations=DESTRUCTIVE)
     def remove_plan_item(item_id: int) -> DayOut:
@@ -340,7 +461,8 @@ Ask before every write. Never create initiatives without my confirmation."""
         return f"""Help me plan {when} in Tobox.
 
 1. Call get_day for {when} and for the previous day, and list_initiatives.
-2. Point out unfinished items from yesterday and offer to carry them forward.
+2. Point out unfinished items from yesterday and offer to carry them forward, and the
+   routines due {when} (routines_due in get_day); add the ones I keep with plan_routines.
 3. Using what you know about my commitments {when} (calendar, messages, deadlines from other
    tools you can use), propose at most six items, ranked, with estimates. Put a Quadrant 2
    item first unless something genuinely urgent and important must come first. Keep total

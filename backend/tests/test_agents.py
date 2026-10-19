@@ -344,6 +344,26 @@ def test_agent_plans_logs_and_reviews_a_day(client: TestClient, agent: Agent) ->
     assert metrics["summary"]["highlight_hit_rate"] == 1.0
 
 
+def test_agent_sets_up_roles_and_routines(client: TestClient, agent: Agent) -> None:
+    parent = data(agent.call("create_role", name="Parent"))
+    soccer = data(agent.call("create_initiative", title="Soccer", quadrant=1, role_id=parent["id"]))
+    practice = data(
+        agent.call("create_routine", initiative_id=soccer["id"], weekdays=[0, 3], start_date=DAY)
+    )
+    assert practice["title"] == "Soccer"
+    assert [r["id"] for r in data(agent.call("get_day", date=DAY))["routines_due"]] == [
+        practice["id"]
+    ]
+    day = data(agent.call("plan_routines", date=DAY))
+    assert [i["routine_id"] for i in day["items"]] == [practice["id"]]
+
+    cleared = data(agent.call("update_initiative", initiative_id=soccer["id"], clear_role=True))
+    assert cleared["role_id"] is None
+    assert data(agent.call("list_roles"))["result"][0]["name"] == "Parent"
+    metrics = data(agent.call("get_metrics", days=1, end=DAY))
+    assert metrics["routines"][0]["planned_days"] == 1
+
+
 def test_domain_rules_surface_as_tool_errors(agent: Agent) -> None:
     init = data(agent.call("create_initiative", title="Many", quadrant=1))
     for n in range(6):
