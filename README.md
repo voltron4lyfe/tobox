@@ -33,7 +33,7 @@ docker compose pull && docker compose up -d     # upgrade
 ```
 
 `TOBOX_TAG` picks a release (default `latest`; `main` tracks the main branch) and `TOBOX_PORT`
-the host port. Without compose: `docker run -d -p 8080:8000 -v tobox-data:/data ghcr.io/chriscla/tobox`.
+the host port. Without compose: `docker run -d -p 8080:8000 -v tobox-data:/data ghcr.io/voltron4lyfe/tobox`.
 From a checkout, `make up` builds the image from source instead.
 
 | Variable | Default | Purpose |

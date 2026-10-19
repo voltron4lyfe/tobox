@@ -3,7 +3,7 @@
 # Put overrides in a .env file next to this one; see README "Run it" for the variables.
 services:
   tobox:
-    image: ${TOBOX_IMAGE:-ghcr.io/chriscla/tobox}:${TOBOX_TAG:-latest}
+    image: ${TOBOX_IMAGE:-ghcr.io/voltron4lyfe/tobox}:${TOBOX_TAG:-latest}
     build: .
     restart: unless-stopped
     ports:
