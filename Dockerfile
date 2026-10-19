@@ -2,7 +2,7 @@
 # One image = the whole app: FastAPI serves the API under /api and the built SPA everywhere else.
 
 # The frontend build is architecture-independent, so run it natively even for arm64 images.
-FROM --platform=$BUILDPLATFORM node:24-alpine AS web
+FROM --platform=$BUILDPLATFORM node:25-alpine AS web
 WORKDIR /web
 COPY frontend/package.json frontend/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
