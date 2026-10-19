@@ -150,7 +150,7 @@ export function TodayPage() {
 
       {!items.length && (
         <div className="card mb-4 flex flex-wrap items-center justify-between gap-3 border-dashed p-4">
-          <p className="text-sm text-slate-600 dark:text-slate-300">
+          <p className="text-sm text-ink-2">
             No plan for this day yet. You can still log work, but you won’t know if it was the right
             work.
           </p>
@@ -181,7 +181,7 @@ export function TodayPage() {
 
           {items.length > 0 && (
             <section className="card overflow-hidden" aria-label="Planned items">
-              <h2 className="eyebrow border-b border-slate-100 px-4 py-2.5 dark:border-white/5">
+              <h2 className="eyebrow border-b border-line-soft px-4 py-2.5">
                 Plan · {s.items_done}/{s.items_planned} done
               </h2>
               <ul>
@@ -201,14 +201,12 @@ export function TodayPage() {
           )}
 
           <section className="card overflow-hidden" aria-label="Log">
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 dark:border-white/5">
+            <div className="flex items-center justify-between border-b border-line-soft px-4 py-2.5">
               <h2 className="eyebrow">Log</h2>
-              <span className="tabular text-xs text-slate-500">
-                {formatMinutes(s.actual_minutes)}
-              </span>
+              <span className="tabular text-xs text-ink-3">{formatMinutes(s.actual_minutes)}</span>
             </div>
             {logs.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-slate-500">
+              <p className="px-4 py-6 text-center text-sm text-ink-3">
                 Nothing logged yet. Press <Kbd keys="l" /> to log work as you go.
               </p>
             ) : (
@@ -245,11 +243,11 @@ export function TodayPage() {
               <span className="tabular text-3xl font-semibold tracking-tight whitespace-nowrap">
                 {formatMinutes(s.actual_minutes)}
               </span>
-              <span className="tabular text-sm text-slate-500">
+              <span className="tabular text-sm text-ink-3">
                 of {formatMinutes(s.planned_minutes)} planned
               </span>
             </div>
-            <div className="mt-4 space-y-2.5 text-xs text-slate-500">
+            <div className="mt-4 space-y-2.5 text-xs text-ink-3">
               <div>
                 <div className="mb-1 flex justify-between">
                   <span>Planned</span>
@@ -278,7 +276,7 @@ export function TodayPage() {
               <Stat label="Done" value={`${s.items_done}/${s.items_planned}`} />
             </dl>
           </section>
-          <p className="hidden px-1 text-xs leading-relaxed text-slate-500 [@media(hover:hover)]:block">
+          <p className="hidden px-1 text-xs leading-relaxed text-ink-3 [@media(hover:hover)]:block">
             <Kbd keys="l" /> log · <Kbd keys="shift+h" /> log highlight · <Kbd keys="j" />/
             <Kbd keys="k" /> select · <Kbd keys="x" /> done · <Kbd keys="e" /> edit ·{' '}
             <Kbd keys="d" /> delete
@@ -292,7 +290,7 @@ export function TodayPage() {
 export function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div>
-      <dt className="text-[11px] text-slate-500">{label}</dt>
+      <dt className="text-[11px] text-ink-3">{label}</dt>
       <dd className="tabular font-semibold" title={hint}>
         {value}
       </dd>
@@ -317,31 +315,31 @@ function HighlightCard({
       aria-label="Highlight"
       className={`card relative overflow-hidden p-4 sm:p-5 ${
         item.done
-          ? 'border-emerald-200 bg-emerald-50/60 dark:border-emerald-500/20 dark:bg-emerald-500/5'
-          : 'border-violet-200 bg-gradient-to-br from-violet-50 to-white dark:border-violet-500/20 dark:from-violet-500/10 dark:to-slate-900/60'
+          ? 'border-success-line bg-success-soft/60'
+          : 'border-accent-line bg-gradient-to-br from-accent-soft to-surface'
       }`}
     >
       <p
-        className={`eyebrow flex items-center gap-1.5 ${item.done ? '!text-emerald-700 dark:!text-emerald-400' : '!text-violet-700 dark:!text-violet-300'}`}
+        className={`eyebrow flex items-center gap-1.5 ${item.done ? '!text-success' : '!text-accent-ink'}`}
       >
         <Star className="size-3.5 fill-current" /> Today’s highlight
       </p>
       <h2
-        className={`mt-1.5 text-lg font-semibold tracking-tight sm:text-xl ${item.done ? 'line-through decoration-emerald-500/60' : ''}`}
+        className={`mt-1.5 text-lg font-semibold tracking-tight sm:text-xl ${item.done ? 'line-through decoration-success/60' : ''}`}
       >
         {item.title}
       </h2>
-      <p className="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
+      <p className="mt-0.5 flex items-center gap-2 text-xs text-ink-3">
         <QuadrantChip q={item.quadrant} /> {initiative?.title}
       </p>
       <div className="mt-4 flex items-center gap-3">
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-violet-100 dark:bg-white/10">
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-accent-soft">
           <div
-            className={`h-full rounded-full transition-all ${item.done ? 'bg-emerald-500' : 'bg-violet-500'}`}
+            className={`h-full rounded-full transition-all ${item.done ? 'bg-success' : 'bg-accent'}`}
             style={{ width: `${item.done ? 100 : pct * 100}%` }}
           />
         </div>
-        <span className="tabular shrink-0 text-xs text-slate-500">
+        <span className="tabular shrink-0 text-xs text-ink-3">
           {formatMinutes(item.logged_minutes)} / {formatMinutes(item.estimate_minutes)}
         </span>
       </div>
@@ -351,7 +349,7 @@ function HighlightCard({
         </button>
         <button
           type="button"
-          className={`btn flex-1 sm:flex-none ${item.done ? 'btn-ghost' : 'bg-emerald-600 text-white hover:bg-emerald-500'}`}
+          className={`btn flex-1 sm:flex-none ${item.done ? 'btn-ghost' : 'bg-success-solid text-white hover:bg-success'}`}
           onClick={onToggleDone}
         >
           <Check className="size-4" /> {item.done ? 'Reopen' : 'Mark done'}
@@ -381,8 +379,8 @@ function ChecklistRow({
     <li
       data-nav-index={index}
       onClick={onSelect}
-      className={`flex items-center gap-3 border-b border-slate-100 px-3 py-2.5 last:border-b-0 sm:px-4 dark:border-white/5 ${
-        selected ? 'outline-2 -outline-offset-2 outline-violet-500/70' : ''
+      className={`flex items-center gap-3 border-b border-line-soft px-3 py-2.5 last:border-b-0 sm:px-4 ${
+        selected ? 'outline-2 -outline-offset-2 outline-accent/70' : ''
       }`}
     >
       <button
@@ -396,24 +394,22 @@ function ChecklistRow({
         }}
         className={`flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition sm:size-5 ${
           item.done
-            ? 'border-emerald-500 bg-emerald-500 text-white'
-            : 'border-slate-300 hover:border-emerald-400 dark:border-white/20'
+            ? 'border-success bg-success text-white'
+            : 'border-line-strong hover:border-success'
         }`}
       >
         {item.done && <Check className="size-3.5" strokeWidth={3} />}
       </button>
       <div className="min-w-0 flex-1">
-        <p
-          className={`truncate text-sm font-medium ${item.done ? 'text-slate-400 line-through' : ''}`}
-        >
+        <p className={`truncate text-sm font-medium ${item.done ? 'text-ink-4 line-through' : ''}`}>
           {item.is_highlight && (
-            <Star className="mr-1 inline size-3.5 -translate-y-px fill-violet-500 text-violet-500" />
+            <Star className="mr-1 inline size-3.5 -translate-y-px fill-accent text-accent" />
           )}
           {item.title}
         </p>
-        <p className="flex items-center gap-1.5 text-xs text-slate-500">
+        <p className="flex items-center gap-1.5 text-xs text-ink-3">
           <span className={`size-1.5 rounded-full ${quadrantMeta(item.quadrant).dot}`} />
-          <span className={`tabular ${over ? 'text-amber-600' : ''}`}>
+          <span className={`tabular ${over ? 'text-warning' : ''}`}>
             {formatMinutes(item.logged_minutes)} / {formatMinutes(item.estimate_minutes)}
           </span>
         </p>
@@ -476,20 +472,18 @@ function LogRow({
       data-nav-index={index}
       onClick={onSelect}
       onDoubleClick={onEdit}
-      className={`group flex items-center gap-3 border-b border-slate-100 px-3 py-2.5 last:border-b-0 sm:px-4 dark:border-white/5 ${
-        selected ? 'outline-2 -outline-offset-2 outline-violet-500/70' : ''
+      className={`group flex items-center gap-3 border-b border-line-soft px-3 py-2.5 last:border-b-0 sm:px-4 ${
+        selected ? 'outline-2 -outline-offset-2 outline-accent/70' : ''
       }`}
     >
-      <span className="tabular w-14 shrink-0 text-xs text-slate-400">{time}</span>
+      <span className="tabular w-14 shrink-0 text-xs text-ink-4">{time}</span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm">{log.title}</p>
-        <p className="flex min-w-0 items-center gap-1.5 text-xs text-slate-500">
+        <p className="flex min-w-0 items-center gap-1.5 text-xs text-ink-3">
           <QuadrantChip q={log.quadrant} />
           <span className="min-w-0 truncate">{initiative?.title}</span>
           {unplanned && (
-            <span className="shrink-0 whitespace-nowrap text-amber-600 dark:text-amber-400">
-              · unplanned
-            </span>
+            <span className="shrink-0 whitespace-nowrap text-warning">· unplanned</span>
           )}
         </p>
       </div>
@@ -527,7 +521,7 @@ function LogEditor({
   return (
     <li
       data-nav-index={index}
-      className="space-y-2 border-b border-slate-100 bg-slate-50/60 px-3 py-3 last:border-b-0 sm:px-4 dark:border-white/5 dark:bg-white/[0.02]"
+      className="space-y-2 border-b border-line-soft bg-subtle/60 px-3 py-3 last:border-b-0 sm:px-4"
     >
       <form
         className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_5rem]"
@@ -592,7 +586,7 @@ function LogEditor({
           </optgroup>
         </select>
         <div className="flex justify-end gap-2 sm:col-span-2">
-          <button type="button" className="btn-ghost text-rose-600" onClick={onDelete}>
+          <button type="button" className="btn-ghost text-danger" onClick={onDelete}>
             <Trash2 className="size-4" /> Delete
           </button>
           <button type="submit" className="btn-primary">

@@ -167,12 +167,12 @@ export const LogComposer = forwardRef<
                   acceptSuggestion(s)
                 }}
                 className={`flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-sm ${
-                  i === suggestIndex ? 'bg-slate-100 dark:bg-white/10' : ''
+                  i === suggestIndex ? 'bg-sunken' : ''
                 }`}
               >
                 <QuadrantChip q={targetQuadrant(s)} />
                 <span className="truncate">{targetLabel(s)}</span>
-                <span className="ml-auto shrink-0 text-xs text-slate-400">
+                <span className="ml-auto shrink-0 text-xs text-ink-4">
                   {s.kind === 'item'
                     ? s.item.is_highlight
                       ? '★ highlight'
@@ -186,18 +186,18 @@ export const LogComposer = forwardRef<
       </div>
 
       {/* Parsed preview */}
-      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-500">
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink-3">
         <span className="inline-flex min-w-0 items-center gap-1.5">
           <Hash className="size-3.5" />
           {target ? (
             <>
               <QuadrantChip q={targetQuadrant(target)} />
-              <span className="max-w-[14rem] truncate font-medium text-slate-700 dark:text-slate-200">
+              <span className="max-w-[14rem] truncate font-medium text-ink-2">
                 {targetLabel(target)}
               </span>
             </>
           ) : unknownTag ? (
-            <span className="text-rose-600">No match for #{parsed.targetQuery}</span>
+            <span className="text-danger">No match for #{parsed.targetQuery}</span>
           ) : (
             <span>Type # to pick what this was for</span>
           )}
@@ -205,7 +205,7 @@ export const LogComposer = forwardRef<
         <span className="tabular inline-flex items-center gap-1">
           <Timer className="size-3.5" />
           {formatMinutes(minutes)}
-          {parsed.minutes === null && <span className="text-slate-400">(default)</span>}
+          {parsed.minutes === null && <span className="text-ink-4">(default)</span>}
         </span>
         <span className="ml-auto hidden items-center gap-1 [@media(hover:hover)]:inline-flex">
           <Kbd keys="enter" /> log · <Kbd keys="mod+enter" /> log &amp; complete
@@ -226,14 +226,12 @@ export const LogComposer = forwardRef<
                 }}
                 className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition ${
                   active
-                    ? 'border-violet-300 bg-violet-50 text-violet-800 dark:border-violet-500/40 dark:bg-violet-500/10 dark:text-violet-200'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5'
+                    ? 'border-accent-line bg-accent-soft text-accent-ink'
+                    : 'border-line text-ink-2 hover:bg-subtle'
                 }`}
               >
-                <span className="text-slate-400">#{i + 1}</span>
-                {t.kind === 'item' && t.item.is_highlight && (
-                  <span className="text-violet-500">★</span>
-                )}
+                <span className="text-ink-4">#{i + 1}</span>
+                {t.kind === 'item' && t.item.is_highlight && <span className="text-accent">★</span>}
                 <span className="max-w-[10rem] truncate">{targetLabel(t)}</span>
               </button>
             )

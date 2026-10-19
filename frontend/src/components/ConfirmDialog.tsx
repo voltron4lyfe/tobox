@@ -18,7 +18,7 @@ export function ConfirmDialog({
   return (
     <Modal open={open} onClose={onClose} title={title}>
       <div className="space-y-4 p-4">
-        <p className="text-sm text-slate-600 dark:text-slate-300">{message}</p>
+        <p className="text-sm text-ink-2">{message}</p>
         <div className="flex justify-end gap-2">
           <button type="button" className="btn-ghost" onClick={onClose}>
             Cancel
@@ -27,7 +27,7 @@ export function ConfirmDialog({
             type="button"
             autoFocus
             data-autofocus
-            className="btn bg-rose-600 text-white hover:bg-rose-500"
+            className="btn-danger"
             onClick={() => {
               onConfirm()
               onClose()

@@ -10,7 +10,7 @@ export function Kbd({ keys, className = '' }: { keys: string; className?: string
           {chord.map((k) => (
             <kbd
               key={k}
-              className="min-w-[1.4em] rounded border border-slate-300/80 bg-slate-50 px-1 text-center font-sans text-[10.5px] leading-[1.5] font-medium text-slate-500 dark:border-white/15 dark:bg-white/5 dark:text-slate-400"
+              className="min-w-[1.4em] rounded border border-line-strong/80 bg-subtle px-1 text-center font-sans text-[10.5px] leading-[1.5] font-medium text-ink-3"
             >
               {k}
             </kbd>

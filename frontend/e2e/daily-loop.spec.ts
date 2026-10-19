@@ -90,3 +90,46 @@ test('shortcut help and command palette open @mobile', async ({ page }) => {
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/initiatives/)
 })
+
+test('theme preference applies everywhere and survives a reload', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' })
+  await page.goto('/today')
+  const html = page.locator('html')
+  await expect(html).toHaveAttribute('data-theme', 'light')
+
+  await page.keyboard.press('g')
+  await page.keyboard.press('s')
+  await expect(page).toHaveURL(/\/settings/)
+  const theme = page.getByRole('radiogroup', { name: 'Theme' })
+  await theme.getByRole('radio', { name: 'Dark' }).click()
+  await expect(html).toHaveAttribute('data-theme', 'dark')
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(11, 17, 32)')
+
+  // Saved on the server, so a reload (and every other page) stays dark.
+  await page.reload()
+  await page.goto('/history')
+  await expect(html).toHaveAttribute('data-theme', 'dark')
+
+  // ⇧T cycles dark → system, which follows the OS.
+  await page.keyboard.press('Shift+T')
+  await expect(html).toHaveAttribute('data-theme', 'light')
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await expect(html).toHaveAttribute('data-theme', 'dark')
+})
+
+test('reminder settings save', async ({ page }) => {
+  await page.goto('/settings')
+  const reminders = page.getByRole('region', { name: 'Reminders' })
+  await reminders.getByRole('switch', { name: 'Highlight nudge' }).click()
+  await reminders.getByRole('button', { name: 'Sat' }).click()
+  await page.reload()
+  await expect(reminders.getByRole('switch', { name: 'Highlight nudge' })).toHaveAttribute(
+    'aria-checked',
+    'false',
+  )
+  await expect(reminders.getByRole('button', { name: 'Sat' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await expect(page.getByRole('region', { name: 'AI agents' })).toContainText('/mcp')
+})

@@ -50,6 +50,13 @@ Single test: `cd backend && uv run pytest tests/test_api.py -k carry` ·
   single quotes, 100 cols). Server data only through hooks in `src/api/hooks.ts`.
 - Days are local `YYYY-MM-DD` strings: use `lib/dates.ts`, never `Date#toISOString()` for days.
 - Quadrant colours/names only from `lib/quadrants.ts` (CVD-validated palette).
+- Other colours only via theme tokens (`bg-surface`, `text-ink-3`, `border-line`, `text-accent`,
+  `bg-danger-soft`…) and `card`/`field`/`btn-*` from `index.css`; never raw palette classes or
+  `dark:`. Screenshot new UI with `f=--dark` as well as light.
+- Business rules live in `ops.py`, shared by REST routers and MCP tools (`agents/server.py`).
+  New capability? Add the op, then expose it in both places.
+- New notification channel = implement `Channel` in `notify/channels.py` + a `ChannelPrefs`
+  field + a Settings row. See docs/architecture.md#notifications.
 - No `useEffect` to copy props into state (lint error). Remount with `key` or mount-on-edit.
 - `<dialog>` close events are async and `showModal()` steals focus. Always use `components/Modal`.
 - Hotkeys pressed during a loading state hit no element: prefer intents that wait for mount

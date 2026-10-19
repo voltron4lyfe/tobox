@@ -53,14 +53,14 @@ export function Modal({
         if (e.target === ref.current) onClose()
       }}
       aria-label={title}
-      className={`m-0 mt-auto max-h-[85dvh] w-full max-w-none overflow-visible bg-transparent p-0 text-inherit backdrop:bg-slate-950/40 sm:mx-auto sm:max-w-lg ${
+      className={`m-0 mt-auto max-h-[85dvh] w-full max-w-none overflow-visible bg-transparent p-0 text-inherit backdrop:bg-scrim sm:mx-auto sm:max-w-lg ${
         position === 'top' ? 'sm:mt-[12vh]' : 'sm:my-auto'
       } ${className}`}
     >
       {open && (
         <div className="card flex max-h-[85dvh] flex-col overflow-hidden rounded-b-none pb-[env(safe-area-inset-bottom)] shadow-2xl sm:rounded-2xl sm:pb-0">
           {title && (
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-white/5">
+            <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
               <h2 className="text-sm font-semibold">{title}</h2>
               <button type="button" onClick={onClose} className="btn-ghost -mr-2 px-2 py-1 text-xs">
                 Esc

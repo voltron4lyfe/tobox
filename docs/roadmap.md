@@ -12,6 +12,12 @@
 - Keyboard-first throughout (`?` overlay, ⌘K palette, g-chords), responsive mobile/desktop,
   dark mode, single-image Docker deployment published to GHCR by GitHub Actions CI/CD.
 
+## v1.1 (done)
+
+- Preferences page; light / dark / system theme built on semantic design tokens.
+- Reminders (plan, Highlight nudge, review) via pluggable channels: browser push and Discord.
+- MCP server with OAuth 2.1 so AI agents can read, plan, log, and review.
+
 ## Next candidates
 
 Roughly in priority order:
@@ -21,7 +27,7 @@ Roughly in priority order:
 2. **Roles** (Covey): optional role per initiative (work, family, health…) and balance metrics.
 3. **Focus timer**: start/stop on a planned item to log minutes automatically.
 4. **PWA**: installable and offline-tolerant, with queued writes.
-5. **Reminders**: morning-plan and evening-review nudges (web push).
+5. **More notification channels**: email (SMTP), Slack, ntfy.
 6. **Export/backup**: JSON/CSV export and import.
 7. **Auth / multi-user**: if it ever needs to leave a private network.
 8. **Drag-and-drop reordering** on touch devices (today: star / arrows / keyboard).

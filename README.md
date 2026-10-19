@@ -15,6 +15,10 @@ did the thing that mattered, and over weeks, whether urgency is crowding out imp
 | Evening | **Review** | Verdict on the Highlight, planned vs. actual by quadrant, rating, reflection, carry-forward |
 | Any time | **History** | Hit rate, streaks, Q2 share, plan adherence, verdict calendar, trends |
 
+Settings holds the theme (light, dark, or match the system), reminder times, and where
+reminders go (browser notifications, Discord). AI agents (Claude, ChatGPT, Cursor, …) can connect
+over **MCP** with OAuth to read your day and help write the evening review from your other tools.
+
 The reasoning behind this design (Covey + Ivy Lee + Daily Highlight + shutdown ritual) is in
 [docs/methodology.md](docs/methodology.md).
 
@@ -31,6 +35,15 @@ docker compose pull && docker compose up -d     # upgrade
 `TOBOX_TAG` picks a release (default `latest`; `main` tracks the main branch) and `TOBOX_PORT`
 the host port. Without compose: `docker run -d -p 8080:8000 -v tobox-data:/data ghcr.io/chriscla/tobox`.
 From a checkout, `make up` builds the image from source instead.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `TOBOX_PUBLIC_URL` | `http://localhost:8000` | URL you reach Tobox at; used for MCP/OAuth and links in notifications |
+| `TOBOX_OWNER_PASSWORD` | unset | Required to approve AI agents from anywhere but the host itself. **Set it if Tobox is reachable over a network.** |
+| `TOBOX_SCHEDULER_ENABLED` | `true` | Send reminders |
+
+Browser notifications need HTTPS (or `localhost`). To connect an agent, copy the MCP URL from
+Settings → AI agents into your agent's connector settings and approve it in the browser.
 
 Data lives in the `tobox-data` Docker volume (SQLite). Back it up with
 `docker compose cp tobox:/data/tobox.db ./tobox-backup.db`. `GET /api/health` reports the running version.
@@ -74,11 +87,13 @@ Press `?` anywhere for the live list, or `Ctrl/⌘ K` for the command palette.
 
 | Global | | Lists (j/k to select) | |
 |---|---|---|---|
-| `g p` `g t` `g r` `g h` `g i` | Plan / Track / Review / History / Initiatives | `j` `k` | Next / previous |
+| `g p` `g t` `g r` `g h` `g i` `g s` | Plan / Track / Review / History / Initiatives / Settings | `j` `k` | Next / previous |
 | `[` `]` `.` | Previous day / next day / today | `e` / `Enter` | Edit |
 | `l` | Log work (from anywhere) | `d` / `Backspace` | Delete / remove |
 | `⌘/Ctrl K` | Command palette | `x` | Toggle done |
 | `?` | Shortcut help | `Esc` | Cancel / clear |
+| `⇧T` | Cycle theme (system / light / dark) | | |
+| `n` (Settings) | Send a test notification | | |
 
 | Plan | | Track | | Review | |
 |---|---|---|---|---|---|

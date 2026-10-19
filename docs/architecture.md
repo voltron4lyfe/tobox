@@ -5,11 +5,19 @@ tobox/
 ├── backend/                 FastAPI + SQLAlchemy 2 + Alembic, managed by uv
 │   ├── src/tobox/
 │   │   ├── main.py          app factory; all routes under /api
-│   │   ├── models.py        ORM models (Initiative, Day, PlannedItem, LogEntry)
+│   │   ├── models.py        ORM models (Initiative, Day, PlannedItem, LogEntry, app state,
+│   │   │                    push subscriptions, notification log, OAuth clients/grants/tokens)
 │   │   ├── schemas.py       Pydantic request/response models = the HTTP contract
 │   │   ├── metrics.py       pure metric functions (no DB/HTTP)
 │   │   ├── services.py      assembles a Day response from rows
-│   │   ├── api/             routers: initiatives, days (+items, logs), metrics
+│   │   ├── ops.py           domain operations shared by the REST API and MCP tools
+│   │   ├── errors.py        DomainError → 404/409/422 (HTTP) or tool errors (MCP)
+│   │   ├── prefs.py         the Preferences document (theme, timezone, notifications)
+│   │   ├── notify/          events (pure rules) → dispatch → channels (web push, Discord);
+│   │   │                    scheduler loop that fires reminders
+│   │   ├── agents/          MCP server (tools + prompts) and its OAuth 2.1 authorization server
+│   │   ├── api/             routers: initiatives, days (+items, logs), metrics, preferences,
+│   │   │                    notifications, agents
 │   │   ├── seed.py          demo data (make seed)
 │   │   └── openapi.py       prints the OpenAPI schema (make api-types)
 │   ├── migrations/          Alembic (render_as_batch for SQLite)
@@ -19,7 +27,8 @@ tobox/
 │   ├── src/api/             schema.d.ts (generated), typed client, TanStack Query hooks
 │   ├── src/lib/             pure helpers (dates, durations, quick-log parser, keys) + hooks
 │   ├── src/components/      UI building blocks (AppShell, Modal, LogComposer, charts, …)
-│   ├── src/pages/           Plan, Today (Track), Review, History, Initiatives
+│   ├── src/pages/           Plan, Today (Track), Review, History, Initiatives, Settings
+│   ├── public/sw.js         service worker: displays web-push reminders
 │   ├── e2e/                 Playwright: full keyboard-driven daily loop
 │   └── scripts/shoot.mjs    headless screenshots for visual checks
 ├── docs/                    methodology, architecture, roadmap
@@ -57,6 +66,52 @@ amd64 image with the same script as `make image` before pushing multi-arch to
 
 Deleting an initiative cascades to its items and logs (the UI steers you to *archive* instead).
 
+## Preferences
+
+One JSON document (`app_state` row `preferences`) validated by the `Preferences` Pydantic model:
+theme, timezone, reminder times/days, and per-channel settings. `GET/PUT /api/preferences`
+reads and replaces it whole; the frontend saves optimistically (`useSavePreferences`). Adding a
+setting is a schema change only: add a defaulted field and run `make api-types`. Old documents
+load because every field has a default. The timezone is set from the browser the first time the
+app loads (`PreferencesSync`), so reminders fire at local times.
+
+## Notifications
+
+```
+scheduler (every 30s) → events (is it relevant?) → dispatch → each enabled channel
+```
+
+- `notify/events.py`: pure rules turning a `DayOut` into an optional `Notification`
+  (plan reminder if nothing is planned, Highlight nudge if no time is on it, review reminder if
+  work is logged but unreviewed). Unit-testable without the clock or a network.
+- `notify/scheduler.py`: decides which reminders are due (configured time, up to 2h late, on an
+  enabled weekday), records each (kind, date) once in `notification_log` so restarts never
+  double-send, and settles irrelevant ones as skipped. Disabled with `TOBOX_SCHEDULER_ENABLED=false`.
+- `notify/channels.py`: the `Channel` protocol (`enabled`, `ready`, `send`) and the `CHANNELS`
+  registry. One failing channel never blocks the others. **To add a channel** (e.g. email):
+  implement the protocol, register it, add its settings to `ChannelPrefs`, and add a row on the
+  Settings page. Everything else (test button, log, readiness) is generic.
+- Web push: the server generates and stores a VAPID key pair; each browser subscribes from
+  Settings (`lib/push.ts`, `public/sw.js`). Expired subscriptions (404/410) are pruned.
+  Browsers allow push only on HTTPS or localhost.
+
+## AI agents (MCP)
+
+`/mcp` is a Model Context Protocol server (streamable HTTP, stateless) so assistants can read
+and edit the day: tools for days, plan items, logs, initiatives, and metrics, plus
+`end_of_day_review` and `morning_plan` prompts. The review prompt tells the agent to pull in
+activity from its *other* tools (Glean, calendar, git…) and propose log entries, asking before it writes.
+Tools call the same `ops.py` functions as the REST API, so rules are identical.
+
+Access uses OAuth 2.1 with Tobox as its own authorization server (`agents/oauth.py`): dynamic
+client registration, PKCE, a consent page at `/oauth/consent` (read, or read & write scopes),
+1h access tokens and rotating 30-day refresh tokens, all stored hashed, with tokens bound to the
+`/mcp` resource (RFC 8707). Consent requires `TOBOX_OWNER_PASSWORD` unless the browser is on the
+same machine (loopback). The container doesn't trust `X-Forwarded-For`, so a proxy can't fake
+loopback. **Behind a proxy, set the password.** `TOBOX_PUBLIC_URL` must be the URL agents use
+(it is the OAuth issuer and resource). Settings lists connected agents; disconnecting one
+revokes its tokens.
+
 ## API contract
 
 The backend's Pydantic schemas are the source of truth. `make api-types` writes
@@ -84,6 +139,14 @@ drift from the server.
   `showModal()` otherwise focuses the Esc button.
 - **Don't sync props into state with `useEffect`** (lint enforces it). Remount with a `key`, or
   mount editors only while editing (`InlineTextEdit`, `LogEditor`).
+- **Theme tokens.** Components use semantic colour utilities defined in `index.css`
+  (`bg-canvas`/`surface`/`raised`/`field`/`subtle`/`sunken`, `text-ink`…`ink-4`,
+  `border-line-soft`/`line`/`line-strong`, `accent`, `success`/`warning`/`danger` each with
+  `-solid`/`-soft`/`-line`/`-ink`) and the `card`, `field`, `btn-*` primitives, never raw
+  palette colours like `bg-slate-100` or `dark:` variants. Light and dark are two blocks of
+  CSS variables keyed on `<html data-theme>`, so re-theming means editing those values only.
+  `lib/theme.ts` resolves the preference (system/light/dark, following the OS for system), and
+  an inline script in `index.html` applies the last choice before first paint.
 - **Quadrant colours** come only from `lib/quadrants.ts`. The palette is validated for colour-
   vision deficiency (Q2 is teal, not green, so it can't be confused with Q1 red). Never
   hand-pick new quadrant colours.
@@ -97,6 +160,9 @@ drift from the server.
 | Sync SQLAlchemy | Workload is tiny; sync code is simpler to read and test. |
 | Server-computed metrics in every Day response | One implementation of the rules, tested in Python. |
 | Generated TS types from OpenAPI | Agents and humans can't silently break the contract. |
-| No auth in v1 | Personal tool run on your own machine/network. Put it behind a reverse proxy with auth if exposed. |
+| No login for the web UI | Personal tool run on your own machine/network. Put it behind a reverse proxy with auth if exposed. |
+| Built-in OAuth server for MCP only | Agents need delegated, revocable, scoped tokens; MCP clients expect OAuth discovery. Doesn't depend on an external identity provider. |
+| Channels behind a protocol + registry | Adding email/Slack is one class and one settings field; dispatch, tests, and UI stay generic. |
+| Reminders only when relevant | A nudge with nothing to act on trains you to ignore them. |
 | Rank #1 ≡ Highlight | Ivy Lee's "do the first thing first" and the Daily Highlight are the same idea; one concept is easier. |
 | `uv` `exclude-newer = "7 days"` | Supply-chain cooldown, matching the owner's global policy, so Docker/CI resolve identically. |

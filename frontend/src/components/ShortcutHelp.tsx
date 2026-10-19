@@ -25,7 +25,7 @@ export function ShortcutHelp({ open, onClose }: { open: boolean; onClose: () => 
             <ul className="space-y-1.5">
               {items.map((h) => (
                 <li key={h.id} className="flex items-center justify-between gap-4 text-sm">
-                  <span className="text-slate-600 dark:text-slate-300">{h.description}</span>
+                  <span className="text-ink-2">{h.description}</span>
                   <Kbd keys={h.keys} className="!inline-flex" />
                 </li>
               ))}

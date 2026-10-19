@@ -40,6 +40,15 @@ Tobox combines the pieces that reinforce each other:
    calendar, and an intended-vs-actual quadrant mix. These show over weeks whether urgency is
    crowding out importance.
 
+6. **Gentle reminders (optional).** At times you choose: plan your day (only if nothing is
+   planned), a Highlight nudge in the afternoon (only if no time is logged on it), and the
+   evening review (only if you logged work and haven't reviewed). A reminder is skipped when it
+   has nothing to ask, and a late one (over 2h) is dropped instead of sent stale. Delivered by
+   browser notification and/or Discord.
+7. **Review with your AI agent (optional).** An assistant connected over MCP can read the day,
+   gather what you did from its other tools (search, calendar, code), and propose log entries
+   and a reflection. You confirm before it writes. The same rules apply as in the UI.
+
 We deliberately left out (for v1) GTD-style inboxes, time blocking, and timers: they add
 ceremony without improving the answer to the core question. See [roadmap](roadmap.md).
 

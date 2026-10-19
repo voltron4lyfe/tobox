@@ -117,7 +117,7 @@ export function InitiativesPage() {
             <label className="btn-ghost cursor-pointer text-xs">
               <input
                 type="checkbox"
-                className="accent-violet-600"
+                className="accent-accent-solid"
                 checked={showInactive}
                 onChange={(e) => setShowInactive(e.target.checked)}
               />
@@ -165,7 +165,7 @@ export function InitiativesPage() {
             ))}
           </div>
           {flat.length > 0 && (
-            <p className="mt-4 hidden text-xs text-slate-500 [@media(hover:hover)]:block">
+            <p className="mt-4 hidden text-xs text-ink-3 [@media(hover:hover)]:block">
               <Kbd keys="j" /> <Kbd keys="k" /> select · <Kbd keys="1" />–<Kbd keys="4" /> move
               quadrant · <Kbd keys="e" /> edit · <Kbd keys="p" /> pause · <Kbd keys="x" /> done ·{' '}
               <Kbd keys="a" /> archive
@@ -234,9 +234,9 @@ function QuadrantPanel({
         <div>
           <h2 className="flex items-center gap-2 text-sm font-semibold">
             <span className={`size-2.5 rounded-full ${meta.dot}`} />Q{q} · {meta.name}
-            <span className="font-normal text-slate-400">— {meta.verb}</span>
+            <span className="font-normal text-ink-4">— {meta.verb}</span>
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500">{meta.hint}</p>
+          <p className="mt-0.5 text-xs text-ink-3">{meta.hint}</p>
         </div>
         <button
           type="button"
@@ -258,9 +258,7 @@ function QuadrantPanel({
                 onClick={() => (isSel ? onEdit(i) : onSelect(idx))}
                 onDoubleClick={() => onEdit(i)}
                 className={`group flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left transition ${
-                  isSel
-                    ? `ring-2 ${meta.ring} ${meta.softBg}`
-                    : 'hover:bg-slate-50 dark:hover:bg-white/5'
+                  isSel ? `ring-2 ${meta.ring} ${meta.softBg}` : 'hover:bg-subtle'
                 } ${i.status !== 'active' ? 'opacity-60' : ''}`}
               >
                 <span className="min-w-0 flex-1">
@@ -270,12 +268,12 @@ function QuadrantPanel({
                     {i.title}
                   </span>
                   {i.description && (
-                    <span className="line-clamp-1 text-xs text-slate-500">{i.description}</span>
+                    <span className="line-clamp-1 text-xs text-ink-3">{i.description}</span>
                   )}
                 </span>
-                {i.status === 'paused' && <Pause className="mt-0.5 size-3.5 text-slate-400" />}
+                {i.status === 'paused' && <Pause className="mt-0.5 size-3.5 text-ink-4" />}
                 {(i.status === 'done' || i.status === 'archived') && (
-                  <span className="text-[11px] text-slate-400">{i.status}</span>
+                  <span className="text-[11px] text-ink-4">{i.status}</span>
                 )}
               </button>
             </li>
@@ -286,7 +284,7 @@ function QuadrantPanel({
         <button
           type="button"
           onClick={onAdd}
-          className="mt-1 rounded-lg border border-dashed border-slate-200 px-3 py-3 text-xs text-slate-400 hover:border-slate-300 hover:text-slate-600 dark:border-white/10"
+          className="mt-1 rounded-lg border border-dashed border-line px-3 py-3 text-xs text-ink-4 hover:border-line-strong hover:text-ink-2"
         >
           {q === 2 ? 'What important work keeps getting pushed aside?' : 'Nothing here yet'}
         </button>

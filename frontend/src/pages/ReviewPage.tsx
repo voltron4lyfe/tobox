@@ -111,7 +111,7 @@ export function ReviewPage() {
         actions={
           d.reviewed_at ? (
             <Link to={dayHref('/plan', tomorrow)} className="btn-outline">
-              <Check className="size-4 text-emerald-600" /> Reviewed · Plan {dayPhrase(tomorrow)}
+              <Check className="size-4 text-success" /> Reviewed · Plan {dayPhrase(tomorrow)}
               <ArrowRight className="size-4" />
             </Link>
           ) : (
@@ -173,8 +173,8 @@ export function ReviewPage() {
                     onClick={() => setRating(n)}
                     className={`tabular rounded-lg border py-2 text-sm font-semibold transition ${
                       d.rating === n
-                        ? 'border-violet-500 bg-violet-600 text-white'
-                        : 'border-slate-200 hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5'
+                        ? 'border-accent bg-accent-solid text-white'
+                        : 'border-line hover:bg-subtle'
                     }`}
                   >
                     {n}
@@ -203,7 +203,7 @@ export function ReviewPage() {
           {unfinished.length > 0 && (
             <section className="card p-4" aria-label="Unfinished">
               <h2 className="eyebrow mb-1">Unfinished</h2>
-              <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
+              <p className="mb-3 text-sm text-ink-2">
                 {unfinished.length} planned item{unfinished.length > 1 ? 's' : ''} didn’t get
                 finished.
               </p>
@@ -230,32 +230,32 @@ function VerdictHero({ day }: { day: Day }) {
     done: {
       icon: CheckCircle2,
       title: 'Yes. You finished your Highlight.',
-      tone: 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-100',
-      iconTone: 'text-emerald-600 dark:text-emerald-400',
+      tone: 'border-success-line bg-success-soft text-success-ink',
+      iconTone: 'text-success',
     },
     worked: {
       icon: CircleDashed,
       title: 'Yes, you worked on your Highlight.',
-      tone: 'border-emerald-200/70 bg-emerald-50/50 text-emerald-900 dark:border-emerald-500/15 dark:bg-emerald-500/5 dark:text-emerald-100',
-      iconTone: 'text-emerald-600 dark:text-emerald-400',
+      tone: 'border-success-line/70 bg-success-soft/50 text-success-ink',
+      iconTone: 'text-success',
     },
     missed: {
       icon: X,
       title: 'No. Your Highlight didn’t get any time.',
-      tone: 'border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-100',
-      iconTone: 'text-rose-600 dark:text-rose-400',
+      tone: 'border-danger-line bg-danger-soft text-danger-ink',
+      iconTone: 'text-danger',
     },
     unplanned: {
       icon: CircleSlash,
       title: 'There was no plan, so there was no Highlight.',
-      tone: 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-100',
-      iconTone: 'text-amber-600 dark:text-amber-400',
+      tone: 'border-warning-line bg-warning-soft text-warning-ink',
+      iconTone: 'text-warning',
     },
     idle: {
       icon: CircleSlash,
       title: 'Nothing was planned or logged.',
-      tone: 'border-slate-200 bg-white text-slate-700 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200',
-      iconTone: 'text-slate-400',
+      tone: 'border-line bg-surface text-ink-2',
+      iconTone: 'text-ink-4',
     },
   }[s.verdict]
   const Icon = content.icon
@@ -299,13 +299,13 @@ function PlannedVsActual({ day }: { day: Day }) {
     <section className="card p-4" aria-label="Planned versus actual">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="eyebrow">Planned vs. actual</h2>
-        <span className="flex items-center gap-3 text-[11px] text-slate-500">
+        <span className="flex items-center gap-3 text-[11px] text-ink-3">
           <span className="inline-flex items-center gap-1">
-            <span className="h-2 w-3 rounded-sm border border-slate-400 border-dashed" />
+            <span className="h-2 w-3 rounded-sm border border-line-strong border-dashed" />
             Planned
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="h-2 w-3 rounded-sm bg-slate-500" />
+            <span className="h-2 w-3 rounded-sm bg-ink-3" />
             Actual
           </span>
         </span>
@@ -323,11 +323,11 @@ function PlannedVsActual({ day }: { day: Day }) {
             >
               <span className="flex items-center gap-1.5 truncate text-xs font-medium">
                 <span className={`size-2 rounded-full ${meta.dot}`} />Q{q}{' '}
-                <span className="truncate text-slate-500">{meta.name}</span>
+                <span className="truncate text-ink-3">{meta.name}</span>
               </span>
               <div className="space-y-1">
                 <div
-                  className={`h-2 rounded-full border-dashed border-slate-400 dark:border-white/30 ${planned ? 'border' : ''}`}
+                  className={`h-2 rounded-full border-dashed border-line-strong ${planned ? 'border' : ''}`}
                   style={{ width: `${(planned / max) * 100}%`, minWidth: planned ? 4 : 0 }}
                 />
                 <div
@@ -339,7 +339,7 @@ function PlannedVsActual({ day }: { day: Day }) {
                 {formatMinutes(actual)}
                 {(planned > 0 || actual > 0) && (
                   <span
-                    className={`block ${delta > 0 ? (q <= 2 ? 'text-emerald-600' : 'text-rose-600') : delta < 0 ? (q <= 2 ? 'text-rose-600' : 'text-emerald-600') : 'text-slate-400'}`}
+                    className={`block ${delta > 0 ? (q <= 2 ? 'text-success' : 'text-danger') : delta < 0 ? (q <= 2 ? 'text-danger' : 'text-success') : 'text-ink-4'}`}
                   >
                     {delta === 0
                       ? '±0'
@@ -359,32 +359,30 @@ function ItemsTable({ day }: { day: Day }) {
   if (!day.items.length) return null
   return (
     <section className="card overflow-hidden" aria-label="Planned items">
-      <h2 className="eyebrow border-b border-slate-100 px-4 py-2.5 dark:border-white/5">
-        The plan, revisited
-      </h2>
+      <h2 className="eyebrow border-b border-line-soft px-4 py-2.5">The plan, revisited</h2>
       <ul>
         {day.items.map((item) => (
           <li
             key={item.id}
-            className="flex items-center gap-3 border-b border-slate-100 px-4 py-2.5 last:border-b-0 dark:border-white/5"
+            className="flex items-center gap-3 border-b border-line-soft px-4 py-2.5 last:border-b-0"
           >
             {item.done ? (
-              <CheckCircle2 className="size-5 shrink-0 text-emerald-500" />
+              <CheckCircle2 className="size-5 shrink-0 text-success" />
             ) : item.logged_minutes > 0 ? (
-              <CircleDashed className="size-5 shrink-0 text-amber-500" />
+              <CircleDashed className="size-5 shrink-0 text-warning" />
             ) : (
-              <X className="size-5 shrink-0 text-slate-300 dark:text-slate-600" />
+              <X className="size-5 shrink-0 text-ink-4" />
             )}
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">
                 {item.is_highlight && (
-                  <Star className="mr-1 inline size-3.5 -translate-y-px fill-violet-500 text-violet-500" />
+                  <Star className="mr-1 inline size-3.5 -translate-y-px fill-accent text-accent" />
                 )}
                 {item.title}
               </p>
             </div>
             <QuadrantChip q={item.quadrant} />
-            <span className="tabular w-24 shrink-0 text-right text-xs text-slate-500">
+            <span className="tabular w-24 shrink-0 text-right text-xs text-ink-3">
               {formatMinutes(item.logged_minutes)} / {formatMinutes(item.estimate_minutes)}
             </span>
           </li>
@@ -410,9 +408,9 @@ function UnplannedWork({ day, initiatives }: { day: Day; initiatives: Initiative
   if (!grouped.length) return null
   return (
     <section className="card overflow-hidden" aria-label="Unplanned work">
-      <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 dark:border-white/5">
+      <div className="flex items-center justify-between border-b border-line-soft px-4 py-2.5">
         <h2 className="eyebrow">Unplanned work</h2>
-        <span className="tabular text-xs text-slate-500">
+        <span className="tabular text-xs text-ink-3">
           {formatMinutes(day.summary.unplanned_minutes)}
         </span>
       </div>
@@ -420,16 +418,14 @@ function UnplannedWork({ day, initiatives }: { day: Day; initiatives: Initiative
         {grouped.map(([id, g]) => (
           <li
             key={id}
-            className="flex items-center gap-3 border-b border-slate-100 px-4 py-2.5 last:border-b-0 dark:border-white/5"
+            className="flex items-center gap-3 border-b border-line-soft px-4 py-2.5 last:border-b-0"
           >
             <QuadrantChip q={g.quadrant} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">
                 {initiatives.find((i) => i.id === id)?.title ?? 'Unknown'}
               </p>
-              <p className="truncate text-xs text-slate-500">
-                {[...new Set(g.titles)].join(' · ')}
-              </p>
+              <p className="truncate text-xs text-ink-3">{[...new Set(g.titles)].join(' · ')}</p>
             </div>
             <span className="tabular text-sm">{formatMinutes(g.minutes)}</span>
           </li>

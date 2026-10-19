@@ -19,6 +19,16 @@ export type DayUpdate = Schemas['DayUpdate']
 export type Metrics = Schemas['MetricsOut']
 export type DayMetrics = Schemas['DayMetrics']
 export type Verdict = DaySummary['verdict']
+export type Preferences = Schemas['Preferences-Output']
+export type PreferencesInput = Schemas['Preferences-Input']
+export type Theme = Preferences['theme']
+export type NotificationPrefs = Preferences['notifications']
+export type ReminderKind = 'plan_reminder' | 'highlight_nudge' | 'review_reminder'
+export type ChannelInfo = Schemas['ChannelInfo']
+export type Delivery = Schemas['Delivery']
+export type NotificationLogEntry = Schemas['NotificationLogOut']
+export type Agent = Schemas['AgentOut']
+export type McpInfo = Schemas['McpInfo']
 
 export const api = createClient<paths>({ baseUrl: '' })
 

@@ -197,7 +197,7 @@ export function PlanPage() {
               className="btn-outline"
               onClick={() => navigate(dayHref('/today', date))}
             >
-              <Check className="size-4 text-emerald-600" /> Plan committed · Track{' '}
+              <Check className="size-4 text-success" /> Plan committed · Track{' '}
               <ArrowRight className="size-4" />
             </button>
           ) : (
@@ -223,10 +223,10 @@ export function PlanPage() {
         <div className="min-w-0 space-y-4">
           {/* Ranked plan */}
           <section aria-label="Today's plan" className="card overflow-hidden">
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 dark:border-white/5">
+            <div className="flex items-center justify-between border-b border-line-soft px-4 py-2.5">
               <h2 className="eyebrow">The plan</h2>
               <span
-                className={`tabular text-xs ${full ? 'font-semibold text-amber-600' : 'text-slate-400'}`}
+                className={`tabular text-xs ${full ? 'font-semibold text-warning' : 'text-ink-4'}`}
               >
                 {items.length} / {MAX_ITEMS}
               </span>
@@ -258,7 +258,7 @@ export function PlanPage() {
 
             {/* Add form */}
             <form
-              className={`grid gap-2 border-t border-slate-100 bg-slate-50/60 p-3 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_5.5rem_auto] dark:border-white/5 dark:bg-white/[0.02] ${full ? 'hidden' : ''}`}
+              className={`grid gap-2 border-t border-line-soft bg-subtle/60 p-3 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_5.5rem_auto] ${full ? 'hidden' : ''}`}
               onSubmit={(e) => {
                 e.preventDefault()
                 submitAdd()
@@ -297,7 +297,7 @@ export function PlanPage() {
               </button>
             </form>
             {full && (
-              <p className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500 dark:border-white/5">
+              <p className="border-t border-line-soft px-4 py-3 text-xs text-ink-3">
                 Six is the limit. If something new matters more, remove something first.
               </p>
             )}
@@ -333,9 +333,9 @@ export function PlanPage() {
                       type="button"
                       disabled={full}
                       onClick={() => carry.mutate({ toDate: date, itemIds: [p.id] }, { onError })}
-                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-slate-50 disabled:opacity-50 dark:hover:bg-white/5"
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-subtle disabled:opacity-50"
                     >
-                      <CornerDownRight className="size-3.5 shrink-0 text-slate-400" />
+                      <CornerDownRight className="size-3.5 shrink-0 text-ink-4" />
                       <span className="flex-1 truncate">{p.title}</span>
                       <QuadrantChip q={p.quadrant} />
                     </button>
@@ -348,9 +348,9 @@ export function PlanPage() {
           <section className="card p-4">
             <h2 className="eyebrow mb-2">Initiatives</h2>
             {initiatives.length === 0 ? (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-ink-3">
                 No initiatives yet.{' '}
-                <Link className="font-medium text-violet-600 underline" to="/initiatives">
+                <Link className="font-medium text-accent underline" to="/initiatives">
                   Create some
                 </Link>{' '}
                 to plan against.
@@ -380,7 +380,7 @@ function IntentionField({ value, onSave }: { value: string; onSave: (v: string) 
     <label className="card flex items-center gap-3 px-4 py-3">
       <span className="eyebrow shrink-0">Intention</span>
       <input
-        className="w-full bg-transparent text-[15px] outline-none placeholder:text-slate-400"
+        className="w-full bg-transparent text-[15px] outline-none placeholder:text-ink-4"
         placeholder="A word or phrase for how you want to show up today (optional)"
         value={text}
         maxLength={200}
@@ -404,9 +404,9 @@ function IntentionField({ value, onSave }: { value: string; onSave: (v: string) 
 function EmptyPlan() {
   return (
     <div className="px-4 py-8 text-center">
-      <Star className="mx-auto size-6 text-violet-400" />
+      <Star className="mx-auto size-6 text-accent" />
       <p className="mt-2 text-sm font-medium">Start with the one thing.</p>
-      <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500">
+      <p className="mx-auto mt-1 max-w-sm text-xs text-ink-3">
         Pick an initiative below (or press <Kbd keys="a" />) and add the task that would make today
         a success. Prefer Q2 work: important, not yet urgent.
       </p>
@@ -450,15 +450,15 @@ function PlanRow({
     <li
       data-nav-index={index}
       onClick={onSelect}
-      className={`group relative flex items-center gap-3 border-b border-slate-100 px-3 py-3 last:border-b-0 sm:px-4 dark:border-white/5 ${
-        isHighlight ? 'bg-violet-50/70 dark:bg-violet-500/[0.07]' : ''
-      } ${selected ? 'outline-2 -outline-offset-2 outline-violet-500/70' : ''}`}
+      className={`group relative flex items-center gap-3 border-b border-line-soft px-3 py-3 last:border-b-0 sm:px-4 ${
+        isHighlight ? 'bg-accent-soft/70' : ''
+      } ${selected ? 'outline-2 -outline-offset-2 outline-accent/70' : ''}`}
     >
       <span
         className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
           isHighlight
-            ? 'bg-violet-600 text-white shadow-sm shadow-violet-600/30'
-            : 'bg-slate-100 text-slate-500 dark:bg-white/5'
+            ? 'bg-accent-solid text-white shadow-sm shadow-accent-solid/30'
+            : 'bg-sunken text-ink-3'
         }`}
         title={isHighlight ? 'Highlight' : `#${index + 1}`}
       >
@@ -477,17 +477,17 @@ function PlanRow({
           <button
             type="button"
             onDoubleClick={onStartEdit}
-            className={`block w-full truncate text-left text-[15px] font-medium ${item.done ? 'text-slate-400 line-through' : ''}`}
+            className={`block w-full truncate text-left text-[15px] font-medium ${item.done ? 'text-ink-4 line-through' : ''}`}
           >
             {isHighlight && (
-              <span className="block text-[10px] font-semibold tracking-wide text-violet-600 uppercase sm:mr-1.5 sm:inline sm:text-[11px] dark:text-violet-400">
+              <span className="block text-[10px] font-semibold tracking-wide text-accent uppercase sm:mr-1.5 sm:inline sm:text-[11px]">
                 Highlight
               </span>
             )}
             {item.title}
           </button>
         )}
-        <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
+        <div className="mt-0.5 flex items-center gap-2 text-xs text-ink-3">
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <span className={`size-1.5 rounded-full ${meta.dot}`} />
             <span className="truncate">
@@ -502,7 +502,7 @@ function PlanRow({
         key={item.estimate_minutes}
         value={item.estimate_minutes}
         onChange={(m) => m !== item.estimate_minutes && onSave({ estimate_minutes: m })}
-        className="w-[4.75rem] shrink-0 border-transparent bg-transparent px-1 py-1 text-xs hover:border-slate-200 dark:bg-transparent"
+        className="w-[4.75rem] shrink-0 border-transparent bg-transparent px-1 py-1 text-xs hover:border-line dark:bg-transparent"
         ariaLabel={`Estimate for ${item.title}`}
       />
 
@@ -586,7 +586,7 @@ function InitiativeSources({
         if (!list.length) return null
         return (
           <div key={q}>
-            <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
+            <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink-3">
               <span className={`size-1.5 rounded-full ${quadrantMeta(q).dot}`} />Q{q} ·{' '}
               {quadrantMeta(q).name}
             </p>
@@ -597,10 +597,10 @@ function InitiativeSources({
                     type="button"
                     disabled={disabled}
                     onClick={() => onPick(i)}
-                    className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-slate-50 disabled:opacity-50 dark:hover:bg-white/5"
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-subtle disabled:opacity-50"
                   >
                     <span className="flex-1 truncate">{i.title}</span>
-                    {plannedIds.has(i.id) && <Check className="size-3.5 text-emerald-500" />}
+                    {plannedIds.has(i.id) && <Check className="size-3.5 text-success" />}
                   </button>
                 </li>
               ))}
@@ -654,7 +654,7 @@ function PlanCheck({
         className="mt-2 h-2.5"
         label="Planned time by quadrant"
       />
-      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-3">
         {QUADRANTS.filter((q) => (plannedByQuadrant[q] ?? 0) > 0).map((q) => (
           <span key={q} className="tabular inline-flex items-center gap-1.5">
             <span className={`size-1.5 rounded-full ${quadrantMeta(q).dot}`} />Q{q}{' '}
@@ -669,8 +669,8 @@ function PlanCheck({
               key={n.text}
               className={`rounded-lg px-3 py-2 text-xs ${
                 n.tone === 'warn'
-                  ? 'bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200'
-                  : 'bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-200'
+                  ? 'bg-warning-soft text-warning-ink'
+                  : 'bg-success-soft text-success-ink'
               }`}
             >
               {n.text}

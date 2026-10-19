@@ -54,7 +54,7 @@ export function HistoryPage() {
           <div
             role="tablist"
             aria-label="Range"
-            className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 dark:border-white/10 dark:bg-slate-900/60"
+            className="inline-flex rounded-lg border border-line bg-surface p-0.5"
           >
             {RANGES.map((r) => (
               <button
@@ -64,9 +64,7 @@ export function HistoryPage() {
                 aria-selected={rangeDays === r.days}
                 onClick={() => setRangeDays(r.days)}
                 className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-                  rangeDays === r.days
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                  rangeDays === r.days ? 'bg-inverse text-on-inverse' : 'text-ink-2 hover:text-ink'
                 }`}
               >
                 {r.label}
@@ -98,7 +96,7 @@ function HistoryBody({ data, onOpenDay }: { data: Metrics; onOpenDay: (date: str
     return (
       <div className="card px-6 py-12 text-center">
         <p className="text-sm font-medium">No tracked days in this range yet.</p>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-ink-3">
           Plan a day, log what you work on, and review it in the evening. Your trends show up here.
         </p>
       </div>
@@ -116,10 +114,10 @@ function HistoryBody({ data, onOpenDay }: { data: Metrics; onOpenDay: (date: str
           <p className="tabular mt-1 text-4xl font-semibold tracking-tight md:text-5xl">
             {formatPercent(s.highlight_hit_rate)}
           </p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-ink-3">
             You worked on your most important thing on{' '}
-            <b className="font-semibold text-slate-700 dark:text-slate-200">{s.highlight_days}</b>{' '}
-            of {data.days.filter((d) => d.highlight).length} planned days.
+            <b className="font-semibold text-ink-2">{s.highlight_days}</b> of{' '}
+            {data.days.filter((d) => d.highlight).length} planned days.
           </p>
         </div>
         <Tile
@@ -146,14 +144,14 @@ function HistoryBody({ data, onOpenDay }: { data: Metrics; onOpenDay: (date: str
       <section className="card min-w-0 p-4" aria-label="Time by quadrant">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="eyebrow">Where the time went</h2>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-3">
             {QUADRANTS.map((q) => (
               <span key={q} className="inline-flex items-center gap-1.5">
                 <QuadrantDot q={q} />Q{q} {quadrantMeta(q).name}
               </span>
             ))}
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-3 border-t-2 border-dashed border-slate-700 dark:border-slate-200" />
+              <span className="w-3 border-t-2 border-dashed border-ink-2" />
               Planned
             </span>
           </div>
@@ -174,7 +172,7 @@ function HistoryBody({ data, onOpenDay }: { data: Metrics; onOpenDay: (date: str
         <section className="card p-4" aria-label="Planned versus actual mix">
           <h2 className="eyebrow mb-3">Intended vs. actual</h2>
           <MixComparison planned={s.planned_by_quadrant} actual={s.actual_by_quadrant} />
-          <p className="mt-4 text-xs leading-relaxed text-slate-500">{mixInsight(data)}</p>
+          <p className="mt-4 text-xs leading-relaxed text-ink-3">{mixInsight(data)}</p>
         </section>
       </div>
 
@@ -204,7 +202,7 @@ function Tile({
         {label}
       </p>
       <p className="tabular mt-1 text-2xl font-semibold tracking-tight">{value}</p>
-      {sub && <p className="mt-0.5 text-xs text-slate-500">{sub}</p>}
+      {sub && <p className="mt-0.5 text-xs text-ink-3">{sub}</p>}
     </div>
   )
 }
@@ -248,11 +246,9 @@ function InitiativesTable({ data }: { data: Metrics }) {
   )
   return (
     <section className="card overflow-hidden" aria-label="Initiatives">
-      <h2 className="eyebrow border-b border-slate-100 px-4 py-2.5 dark:border-white/5">
-        Initiatives
-      </h2>
+      <h2 className="eyebrow border-b border-line-soft px-4 py-2.5">Initiatives</h2>
       {data.initiatives.length === 0 ? (
-        <p className="px-4 py-6 text-sm text-slate-500">No initiative activity in this range.</p>
+        <p className="px-4 py-6 text-sm text-ink-3">No initiative activity in this range.</p>
       ) : (
         <table className="w-full table-fixed text-sm">
           <colgroup>
@@ -269,34 +265,29 @@ function InitiativesTable({ data }: { data: Metrics }) {
           </thead>
           <tbody>
             {data.initiatives.map((i) => (
-              <tr
-                key={i.initiative_id}
-                className="border-b border-slate-100 last:border-b-0 dark:border-white/5"
-              >
+              <tr key={i.initiative_id} className="border-b border-line-soft last:border-b-0">
                 <td className="px-4 py-2.5">
                   <div className="flex items-center gap-2">
                     <QuadrantChip q={i.quadrant} />
                     <span className="truncate font-medium">{i.title}</span>
                   </div>
-                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-white/5">
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-sunken">
                     <div
                       className={`h-full rounded-full ${quadrantMeta(i.quadrant).dot}`}
                       style={{ width: `${(i.actual_minutes / max) * 100}%` }}
                     />
                   </div>
                 </td>
-                <td className="tabular px-2 py-2.5 text-right text-xs whitespace-nowrap text-slate-600 dark:text-slate-300">
+                <td className="tabular px-2 py-2.5 text-right text-xs whitespace-nowrap text-ink-2">
                   {formatMinutes(i.actual_minutes)}
-                  <span className="block text-slate-400">
+                  <span className="block text-ink-4">
                     of {formatMinutes(i.planned_minutes)} plan
                   </span>
                 </td>
-                <td className="tabular px-4 py-2.5 text-right text-xs whitespace-nowrap text-slate-500">
+                <td className="tabular px-4 py-2.5 text-right text-xs whitespace-nowrap text-ink-3">
                   {i.days_worked}d
                   {i.highlight_days > 0 && (
-                    <span className="block text-violet-600 dark:text-violet-400">
-                      ★ {i.highlight_days}
-                    </span>
+                    <span className="block text-accent">★ {i.highlight_days}</span>
                   )}
                 </td>
               </tr>
@@ -311,7 +302,7 @@ function InitiativesTable({ data }: { data: Metrics }) {
 function DaysTable({ days, onOpenDay }: { days: DayMetrics[]; onOpenDay: (d: string) => void }) {
   return (
     <section className="card overflow-hidden" aria-label="Days">
-      <h2 className="eyebrow border-b border-slate-100 px-4 py-2.5 dark:border-white/5">Days</h2>
+      <h2 className="eyebrow border-b border-line-soft px-4 py-2.5">Days</h2>
       <div className="max-h-[28rem] overflow-y-auto">
         <table className="w-full table-fixed text-sm">
           <colgroup>
@@ -333,22 +324,22 @@ function DaysTable({ days, onOpenDay }: { days: DayMetrics[]; onOpenDay: (d: str
               <tr
                 key={d.date}
                 onClick={() => onOpenDay(d.date)}
-                className="cursor-pointer border-b border-slate-100 last:border-b-0 hover:bg-slate-50 dark:border-white/5 dark:hover:bg-white/5"
+                className="cursor-pointer border-b border-line-soft last:border-b-0 hover:bg-subtle"
               >
-                <td className="px-4 py-2.5 text-xs whitespace-nowrap text-slate-500">
+                <td className="px-4 py-2.5 text-xs whitespace-nowrap text-ink-3">
                   {formatDay(d.date)}
                 </td>
                 <td className="px-2 py-2.5">
                   <p className="truncate">
-                    {d.highlight?.title ?? <span className="text-slate-400">No highlight</span>}
+                    {d.highlight?.title ?? <span className="text-ink-4">No highlight</span>}
                   </p>
                   <VerdictBadge verdict={d.verdict} />
                 </td>
                 <td className="tabular px-2 py-2.5 text-right text-xs whitespace-nowrap">
-                  {formatPercent(d.q2_share)} <span className="text-slate-400">Q2</span>
-                  <span className="block text-slate-400">{formatMinutes(d.actual_minutes)}</span>
+                  {formatPercent(d.q2_share)} <span className="text-ink-4">Q2</span>
+                  <span className="block text-ink-4">{formatMinutes(d.actual_minutes)}</span>
                 </td>
-                <td className="tabular px-4 py-2.5 text-right text-xs text-slate-500">
+                <td className="tabular px-4 py-2.5 text-right text-xs text-ink-3">
                   {d.rating ? `${d.rating}/5` : ''}
                 </td>
               </tr>

@@ -1,5 +1,143 @@
 @import 'tailwindcss';
 
+/*
+ * Theme. Components use only the semantic colour tokens below (bg-surface, text-ink-3,
+ * border-line, text-accent, bg-success-soft…), never raw palette colours, so a re-skin means
+ * editing these values and nothing else. The active theme is <html data-theme="light|dark">,
+ * set by lib/theme.ts from the user's preference (light, dark, or match the system).
+ *
+ * Exceptions, by design: quadrant colours (lib/quadrants.ts) and verdict swatches
+ * (components/Verdict.tsx) are a CVD-validated categorical palette, not theme colours.
+ */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root {
+  color-scheme: light;
+  /* Surfaces, back to front */
+  --canvas: var(--color-slate-50);
+  --surface: var(--color-white);
+  --raised: var(--color-white);
+  --field: var(--color-white);
+  --subtle: var(--color-slate-50);
+  --sunken: var(--color-slate-100);
+  /* Text, strongest to faintest */
+  --ink: var(--color-slate-900);
+  --ink-2: var(--color-slate-600);
+  --ink-3: var(--color-slate-500);
+  --ink-4: var(--color-slate-400);
+  /* Borders */
+  --line-soft: var(--color-slate-100);
+  --line: var(--color-slate-200);
+  --line-strong: var(--color-slate-300);
+  /* Primary action (high-contrast button) */
+  --inverse: var(--color-slate-900);
+  --inverse-hover: var(--color-slate-700);
+  --on-inverse: var(--color-white);
+  /* Accent: focus, links, the Highlight */
+  --accent: var(--color-violet-600);
+  --accent-solid: var(--color-violet-600);
+  --accent-soft: var(--color-violet-50);
+  --accent-line: var(--color-violet-200);
+  --accent-ink: var(--color-violet-800);
+  /* Status (always paired with an icon or label, never colour alone) */
+  --success: var(--color-emerald-600);
+  --success-solid: var(--color-emerald-600);
+  --success-soft: var(--color-emerald-50);
+  --success-line: var(--color-emerald-200);
+  --success-ink: var(--color-emerald-800);
+  --warning: var(--color-amber-600);
+  --warning-soft: var(--color-amber-50);
+  --warning-line: var(--color-amber-200);
+  --warning-ink: var(--color-amber-800);
+  --danger: var(--color-rose-600);
+  --danger-solid: var(--color-rose-600);
+  --danger-soft: var(--color-rose-50);
+  --danger-line: var(--color-rose-200);
+  --danger-ink: var(--color-rose-800);
+  --scrim: rgb(2 6 23 / 0.4);
+  --shadow-color: rgb(15 23 42 / 0.04);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --canvas: #0b1120;
+  --surface: rgb(15 23 42 / 0.6);
+  --raised: var(--color-slate-900);
+  --field: rgb(2 6 23 / 0.5);
+  --subtle: rgb(255 255 255 / 0.05);
+  --sunken: rgb(255 255 255 / 0.08);
+  --ink: var(--color-slate-100);
+  --ink-2: var(--color-slate-300);
+  --ink-3: var(--color-slate-400);
+  --ink-4: var(--color-slate-500);
+  --line-soft: rgb(255 255 255 / 0.05);
+  --line: rgb(255 255 255 / 0.1);
+  --line-strong: rgb(255 255 255 / 0.2);
+  --inverse: var(--color-white);
+  --inverse-hover: var(--color-slate-200);
+  --on-inverse: var(--color-slate-900);
+  --accent: var(--color-violet-400);
+  --accent-solid: var(--color-violet-600);
+  --accent-soft: rgb(139 92 246 / 0.1);
+  --accent-line: rgb(139 92 246 / 0.25);
+  --accent-ink: var(--color-violet-200);
+  --success: var(--color-emerald-400);
+  --success-solid: var(--color-emerald-600);
+  --success-soft: rgb(16 185 129 / 0.1);
+  --success-line: rgb(16 185 129 / 0.2);
+  --success-ink: var(--color-emerald-200);
+  --warning: var(--color-amber-400);
+  --warning-soft: rgb(245 158 11 / 0.1);
+  --warning-line: rgb(245 158 11 / 0.2);
+  --warning-ink: var(--color-amber-200);
+  --danger: var(--color-rose-400);
+  --danger-solid: var(--color-rose-600);
+  --danger-soft: rgb(244 63 94 / 0.1);
+  --danger-line: rgb(244 63 94 / 0.25);
+  --danger-ink: var(--color-rose-200);
+  --scrim: rgb(2 6 23 / 0.6);
+  --shadow-color: rgb(0 0 0 / 0.2);
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-field: var(--field);
+  --color-subtle: var(--subtle);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-line-soft: var(--line-soft);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-inverse: var(--inverse);
+  --color-inverse-hover: var(--inverse-hover);
+  --color-on-inverse: var(--on-inverse);
+  --color-accent: var(--accent);
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-accent-ink: var(--accent-ink);
+  --color-success: var(--success);
+  --color-success-solid: var(--success-solid);
+  --color-success-soft: var(--success-soft);
+  --color-success-line: var(--success-line);
+  --color-success-ink: var(--success-ink);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-line: var(--warning-line);
+  --color-warning-ink: var(--warning-ink);
+  --color-danger: var(--danger);
+  --color-danger-solid: var(--danger-solid);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+  --color-danger-ink: var(--danger-ink);
+  --color-scrim: var(--scrim);
+}
+
 @theme {
   --font-sans:
     'Inter var', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -11,26 +149,28 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-slate-50 text-slate-900 antialiased dark:bg-[#0b1120] dark:text-slate-100;
+    @apply bg-canvas text-ink antialiased;
   }
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-violet-500;
+    @apply outline-2 outline-offset-2 outline-accent;
   }
   dialog::backdrop {
-    @apply bg-slate-950/40 backdrop-blur-[2px];
+    @apply bg-scrim backdrop-blur-[2px];
   }
 }
+
+/* Component primitives: compose these instead of restyling buttons/cards/fields ad hoc. */
 
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }
 
 @utility card {
-  @apply rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-white/[0.07] dark:bg-slate-900/60;
+  @apply rounded-2xl border border-line/80 bg-surface shadow-[0_1px_2px_var(--shadow-color)];
 }
 
 @utility field {
-  @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[15px] placeholder:text-slate-400 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 focus:outline-none sm:text-sm dark:border-white/10 dark:bg-slate-950/50 dark:placeholder:text-slate-500;
+  @apply w-full rounded-lg border border-line bg-field px-3 py-2 text-[15px] placeholder:text-ink-4 focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none sm:text-sm;
 }
 
 @utility btn {
@@ -38,17 +178,21 @@
 }
 
 @utility btn-primary {
-  @apply btn bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200;
+  @apply btn bg-inverse text-on-inverse hover:bg-inverse-hover;
 }
 
 @utility btn-ghost {
-  @apply btn text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white;
+  @apply btn text-ink-2 hover:bg-subtle hover:text-ink;
 }
 
 @utility btn-outline {
-  @apply btn border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-transparent dark:text-slate-200 dark:hover:bg-white/5;
+  @apply btn border border-line bg-surface text-ink-2 hover:bg-subtle;
+}
+
+@utility btn-danger {
+  @apply btn bg-danger-solid text-white hover:opacity-90;
 }
 
 @utility eyebrow {
-  @apply text-[11px] font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400;
+  @apply text-[11px] font-semibold tracking-wider text-ink-3 uppercase;
 }

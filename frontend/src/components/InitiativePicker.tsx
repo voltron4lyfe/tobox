@@ -91,7 +91,7 @@ export function InitiativePicker({
           className="card absolute z-20 mt-1 max-h-64 w-full overflow-y-auto p-1 shadow-xl"
         >
           {options.length === 0 && (
-            <li className="px-3 py-2 text-sm text-slate-500">No matching initiative</li>
+            <li className="px-3 py-2 text-sm text-ink-3">No matching initiative</li>
           )}
           {options.map((i, idx) => (
             <li
@@ -104,13 +104,13 @@ export function InitiativePicker({
               }}
               onMouseEnter={() => setActive(idx)}
               className={`flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-sm ${
-                idx === active ? 'bg-slate-100 dark:bg-white/10' : ''
+                idx === active ? 'bg-sunken' : ''
               }`}
             >
               <QuadrantChip q={i.quadrant} />
               <span className="truncate">{i.title}</span>
               {i.status !== 'active' && (
-                <span className="ml-auto text-xs text-slate-400">{i.status}</span>
+                <span className="ml-auto text-xs text-ink-4">{i.status}</span>
               )}
             </li>
           ))}

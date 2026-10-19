@@ -44,7 +44,7 @@ export function QuadrantMixBar({
       role="img"
       aria-label={`${label ? `${label}: ` : ''}${description}`}
       title={description}
-      className={`flex w-full gap-px overflow-hidden rounded-full bg-slate-100 dark:bg-white/5 ${className}`}
+      className={`flex w-full gap-px overflow-hidden rounded-full bg-sunken ${className}`}
     >
       {QUADRANTS.map((q) => {
         const v = minutes[q] ?? 0
@@ -63,7 +63,7 @@ export function QuadrantMixBar({
 
 export function QuadrantLegend({ className = '' }: { className?: string }) {
   return (
-    <div className={`flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 ${className}`}>
+    <div className={`flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-3 ${className}`}>
       {QUADRANTS.map((q) => (
         <span key={q} className="inline-flex items-center gap-1.5">
           <QuadrantDot q={q} />Q{q} {quadrantMeta(q).name}

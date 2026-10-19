@@ -54,7 +54,7 @@ export function TimeByQuadrantChart({
                 x2={innerW}
                 y1={y(t)}
                 y2={y(t)}
-                className="stroke-slate-200 dark:stroke-white/[0.06]"
+                className="stroke-line"
                 strokeWidth={1}
               />
               <text
@@ -62,7 +62,7 @@ export function TimeByQuadrantChart({
                 y={y(t)}
                 dy="0.32em"
                 textAnchor="end"
-                className="fill-slate-400 text-[10px] tabular-nums"
+                className="fill-ink-4 text-[10px] tabular-nums"
               >
                 {t / 60}h
               </text>
@@ -105,7 +105,7 @@ export function TimeByQuadrantChart({
                     y2={y(b.planned)}
                     strokeWidth={2}
                     strokeLinecap="round"
-                    className="stroke-slate-700 dark:stroke-slate-200"
+                    className="stroke-ink-2"
                     strokeDasharray="3 2"
                   />
                 )}
@@ -126,7 +126,7 @@ export function TimeByQuadrantChart({
                     x={cx}
                     y={innerH + 15}
                     textAnchor="middle"
-                    className="fill-slate-400 text-[10px]"
+                    className="fill-ink-4 text-[10px]"
                   >
                     {axisLabel(b.start, buckets.length)}
                   </text>
@@ -162,7 +162,7 @@ function TooltipBody({ bucket }: { bucket: Bucket }) {
           <span className="tabular-nums">{formatMinutes(bucket.actual[q] ?? 0)}</span>
         </p>
       ))}
-      <p className="mt-1 flex justify-between gap-4 border-t border-slate-200 pt-1 dark:border-white/10">
+      <p className="mt-1 flex justify-between gap-4 border-t border-line pt-1">
         <span>Logged / planned</span>
         <span className="tabular-nums">
           {formatMinutes(bucket.actualTotal)} / {formatMinutes(bucket.planned)}
@@ -185,7 +185,7 @@ export function ChartTooltip({
   return (
     <div
       role="tooltip"
-      className="pointer-events-none absolute top-0 z-10 w-56 -translate-x-1/2 -translate-y-[calc(100%+6px)] rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-700 shadow-xl dark:border-white/10 dark:bg-slate-900 dark:text-slate-200"
+      className="pointer-events-none absolute top-0 z-10 w-56 -translate-x-1/2 -translate-y-[calc(100%+6px)] rounded-xl border border-line bg-raised p-2.5 text-xs text-ink-2 shadow-xl"
       style={{ left }}
     >
       {children}
@@ -229,10 +229,10 @@ function MixRow({ label, minutes }: { label: string; minutes: Record<string, num
     <div>
       <div className="mb-1.5 flex justify-between text-xs">
         <span className="font-medium">{label}</span>
-        <span className="tabular text-slate-500">{formatHours(total)}</span>
+        <span className="tabular text-ink-3">{formatHours(total)}</span>
       </div>
       {total === 0 ? (
-        <div className="h-6 rounded-md bg-slate-100 dark:bg-white/5" />
+        <div className="h-6 rounded-md bg-sunken" />
       ) : (
         <div className="flex h-6 gap-[2px]">
           {QUADRANTS.filter((q) => (minutes[q] ?? 0) > 0).map((q) => {
@@ -284,7 +284,7 @@ export function VerdictCalendar({
     <div className="overflow-x-auto pb-1">
       <div className={`inline-flex ${big ? 'w-full max-w-xl flex-col gap-1' : 'gap-[3px]'}`}>
         {big && (
-          <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-slate-400">
+          <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-ink-4">
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
               <span key={d}>{d}</span>
             ))}
@@ -311,14 +311,12 @@ export function VerdictCalendar({
                     inRange
                       ? `${meta?.swatch ?? VERDICT_META.idle.swatch} hover:ring-2 hover:ring-slate-400/60`
                       : 'bg-transparent'
-                  } ${date === today() ? 'ring-2 ring-slate-900/70 dark:ring-white/70' : ''}`}
+                  } ${date === today() ? 'ring-2 ring-ink/70' : ''}`}
                 >
                   {big && inRange && (
                     <span
                       className={
-                        d && d.verdict !== 'idle'
-                          ? 'font-medium text-slate-900/70'
-                          : 'text-slate-400'
+                        d && d.verdict !== 'idle' ? 'font-medium text-ink/70' : 'text-ink-4'
                       }
                     >
                       {parseISODate(date).getDate()}
@@ -336,7 +334,7 @@ export function VerdictCalendar({
 
 export function VerdictLegend() {
   return (
-    <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
+    <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-ink-3">
       {(['done', 'worked', 'missed', 'unplanned', 'idle'] as const).map((v) => (
         <span key={v} className="inline-flex items-center gap-1.5">
           <span className={`size-2.5 rounded-[3px] ${VERDICT_META[v].swatch}`} />

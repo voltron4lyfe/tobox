@@ -26,9 +26,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={t.id}
             className={`pointer-events-auto rounded-xl px-4 py-2.5 text-sm font-medium shadow-lg ${
-              t.tone === 'error'
-                ? 'bg-rose-600 text-white'
-                : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+              t.tone === 'error' ? 'bg-danger-solid text-white' : 'bg-inverse text-on-inverse'
             }`}
           >
             {t.message}

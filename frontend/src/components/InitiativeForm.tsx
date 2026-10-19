@@ -57,7 +57,7 @@ export function InitiativeForm({
       }}
     >
       <label className="block space-y-1.5">
-        <span className="text-xs font-medium text-slate-500">Title</span>
+        <span className="text-xs font-medium text-ink-3">Title</span>
         <input
           autoFocus
           className="field"
@@ -69,7 +69,7 @@ export function InitiativeForm({
       </label>
 
       <fieldset className="space-y-1.5">
-        <legend className="flex w-full items-center justify-between text-xs font-medium text-slate-500">
+        <legend className="flex w-full items-center justify-between text-xs font-medium text-ink-3">
           Quadrant <Kbd keys="alt+1" className="opacity-70" />
         </legend>
         <div className="grid grid-cols-2 gap-2" role="radiogroup">
@@ -86,13 +86,13 @@ export function InitiativeForm({
                 className={`rounded-xl border p-2.5 text-left transition ${
                   checked
                     ? `border-transparent ring-2 ${meta.ring} ${meta.softBg}`
-                    : 'border-slate-200 hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5'
+                    : 'border-line hover:bg-subtle'
                 }`}
               >
                 <span className="flex items-center gap-1.5 text-sm font-semibold">
                   <span className={`size-2 rounded-full ${meta.dot}`} />Q{q} · {meta.name}
                 </span>
-                <span className="mt-0.5 block text-[11px] text-slate-500">{meta.axes}</span>
+                <span className="mt-0.5 block text-[11px] text-ink-3">{meta.axes}</span>
               </button>
             )
           })}
@@ -100,7 +100,7 @@ export function InitiativeForm({
       </fieldset>
 
       <label className="block space-y-1.5">
-        <span className="text-xs font-medium text-slate-500">Why it matters (optional)</span>
+        <span className="text-xs font-medium text-ink-3">Why it matters (optional)</span>
         <textarea
           className="field min-h-[4.5rem] resize-y"
           value={draft.description}
@@ -110,7 +110,7 @@ export function InitiativeForm({
 
       {initial && (
         <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-slate-500">Status</span>
+          <span className="text-xs font-medium text-ink-3">Status</span>
           <select
             className="field"
             value={draft.status}

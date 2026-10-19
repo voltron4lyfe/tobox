@@ -11,12 +11,19 @@ import {
   type LogEntryUpdate,
   type PlannedItemCreate,
   type PlannedItemUpdate,
+  type Preferences,
 } from './client'
 
 export const keys = {
   initiatives: (includeArchived = false) => ['initiatives', { includeArchived }] as const,
   day: (date: string) => ['day', date] as const,
   metrics: (start: string, end: string) => ['metrics', start, end] as const,
+  preferences: ['preferences'] as const,
+  channels: ['notifications', 'channels'] as const,
+  webpush: ['notifications', 'webpush'] as const,
+  notificationLog: ['notifications', 'log'] as const,
+  agents: ['agents'] as const,
+  mcp: ['agents', 'mcp'] as const,
 }
 
 export function useInitiatives(includeArchived = false) {
@@ -150,4 +157,95 @@ export function useDeleteLog() {
   return useDayMutation((id: number) =>
     unwrap(api.DELETE('/api/logs/{log_id}', { params: { path: { log_id: id } } })),
   )
+}
+
+// --- Preferences ---------------------------------------------------------------------------
+
+export function usePreferences() {
+  return useQuery({
+    queryKey: keys.preferences,
+    queryFn: () => unwrap(api.GET('/api/preferences')),
+    staleTime: 60_000,
+  })
+}
+
+/** Saves the whole document. Applied to the cache immediately and rolled back on failure. */
+export function useSavePreferences() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: Preferences) => unwrap(api.PUT('/api/preferences', { body })),
+    onMutate: async (next) => {
+      await qc.cancelQueries({ queryKey: keys.preferences })
+      const previous = qc.getQueryData<Preferences>(keys.preferences)
+      qc.setQueryData(keys.preferences, next)
+      return { previous }
+    },
+    onError: (_err, _next, ctx) => {
+      if (ctx?.previous) qc.setQueryData(keys.preferences, ctx.previous)
+    },
+    onSuccess: (saved) => {
+      qc.setQueryData(keys.preferences, saved)
+      void qc.invalidateQueries({ queryKey: keys.channels })
+    },
+  })
+}
+
+// --- Notifications -------------------------------------------------------------------------
+
+export function useChannels() {
+  return useQuery({
+    queryKey: keys.channels,
+    queryFn: () => unwrap(api.GET('/api/notifications/channels')),
+  })
+}
+
+export function useWebPushConfig() {
+  return useQuery({
+    queryKey: keys.webpush,
+    queryFn: () => unwrap(api.GET('/api/notifications/webpush')),
+  })
+}
+
+export function useNotificationLog() {
+  return useQuery({
+    queryKey: keys.notificationLog,
+    queryFn: () => unwrap(api.GET('/api/notifications/log', { params: { query: { limit: 10 } } })),
+  })
+}
+
+export function useSendTestNotification() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.POST('/api/notifications/test')),
+    onSettled: () => void qc.invalidateQueries({ queryKey: ['notifications'] }),
+  })
+}
+
+/** Refresh channel readiness after the browser subscribes or unsubscribes. */
+export function useInvalidateNotifications() {
+  const qc = useQueryClient()
+  return () => void qc.invalidateQueries({ queryKey: ['notifications'] })
+}
+
+// --- AI agents -----------------------------------------------------------------------------
+
+export function useAgents() {
+  return useQuery({ queryKey: keys.agents, queryFn: () => unwrap(api.GET('/api/agents')) })
+}
+
+export function useMcpInfo() {
+  return useQuery({
+    queryKey: keys.mcp,
+    queryFn: () => unwrap(api.GET('/api/agents/mcp')),
+    staleTime: Infinity,
+  })
+}
+
+export function useDisconnectAgent() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (clientId: string) =>
+      unwrap(api.DELETE('/api/agents/{client_id}', { params: { path: { client_id: clientId } } })),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: keys.agents }),
+  })
 }

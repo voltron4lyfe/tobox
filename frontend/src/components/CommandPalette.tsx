@@ -40,12 +40,12 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
 
   return (
     <>
-      <div className="flex items-center gap-2 border-b border-slate-100 px-4 dark:border-white/5">
-        <Search className="size-4 text-slate-400" />
+      <div className="flex items-center gap-2 border-b border-line-soft px-4">
+        <Search className="size-4 text-ink-4" />
         <input
           autoFocus
           aria-label="Search commands"
-          className="w-full bg-transparent py-3 text-[15px] outline-none placeholder:text-slate-400"
+          className="w-full bg-transparent py-3 text-[15px] outline-none placeholder:text-ink-4"
           placeholder="Type a command…"
           value={query}
           onChange={(e) => {
@@ -68,7 +68,7 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
       </div>
       <ul className="max-h-80 overflow-y-auto p-1.5">
         {commands.length === 0 && (
-          <li className="px-3 py-6 text-center text-sm text-slate-500">No commands</li>
+          <li className="px-3 py-6 text-center text-sm text-ink-3">No commands</li>
         )}
         {commands.map((c, i) => (
           <li key={c.id}>
@@ -77,11 +77,11 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
               onMouseEnter={() => setActive(i)}
               onClick={() => run(i)}
               className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm ${
-                i === active ? 'bg-slate-100 dark:bg-white/10' : ''
+                i === active ? 'bg-sunken' : ''
               }`}
             >
               <span>
-                <span className="text-slate-400">{c.group ?? 'General'} · </span>
+                <span className="text-ink-4">{c.group ?? 'General'} · </span>
                 {c.description}
               </span>
               <Kbd keys={c.keys} />

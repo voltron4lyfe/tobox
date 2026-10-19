@@ -9,6 +9,7 @@ import { HomeRedirect } from './pages/HomeRedirect'
 import { InitiativesPage } from './pages/InitiativesPage'
 import { PlanPage } from './pages/PlanPage'
 import { ReviewPage } from './pages/ReviewPage'
+import { SettingsPage } from './pages/SettingsPage'
 import { TodayPage } from './pages/TodayPage'
 
 const queryClient = new QueryClient({
@@ -25,6 +26,7 @@ export const routes = [
       { path: 'review', element: <ReviewPage /> },
       { path: 'history', element: <HistoryPage /> },
       { path: 'initiatives', element: <InitiativesPage /> },
+      { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

@@ -5,6 +5,7 @@ import {
   Grid2x2,
   ListChecks,
   Moon,
+  Settings,
   Sunrise,
   type LucideIcon,
 } from 'lucide-react'
@@ -17,6 +18,7 @@ import { useHotkeys } from '../lib/hotkeys'
 import { dayHref, useSelectedDate } from '../lib/useSelectedDate'
 import { CommandPalette } from './CommandPalette'
 import { Kbd } from './Kbd'
+import { PreferencesSync, useCycleTheme } from './PreferencesSync'
 import { ShortcutHelp } from './ShortcutHelp'
 
 interface NavItem {
@@ -26,6 +28,8 @@ interface NavItem {
   icon: LucideIcon
   keys: string
   dayScoped: boolean
+  /** Shown in the mobile tab bar (Settings lives in the mobile header instead). */
+  tab?: boolean
 }
 
 const NAV: NavItem[] = [
@@ -48,7 +52,17 @@ const NAV: NavItem[] = [
     keys: 'g i',
     dayScoped: false,
   },
+  {
+    to: '/settings',
+    label: 'Settings',
+    short: 'Settings',
+    icon: Settings,
+    keys: 'g s',
+    dayScoped: false,
+    tab: false,
+  },
 ]
+const SETTINGS = NAV.length - 1
 
 export function AppShell() {
   const location = useLocation()
@@ -58,6 +72,7 @@ export function AppShell() {
   const [paletteOpen, setPaletteOpen] = useState(false)
   const isDayPage = NAV.some((n) => n.dayScoped && location.pathname.startsWith(n.to))
   const hrefFor = (n: NavItem) => (n.dayScoped ? dayHref(n.to, date) : n.to)
+  const cycleTheme = useCycleTheme()
 
   useHotkeys([
     ...NAV.map((n) => ({
@@ -97,6 +112,12 @@ export function AppShell() {
       },
     },
     {
+      keys: 'shift+t',
+      description: 'Switch theme (system / light / dark)',
+      group: 'General',
+      handler: cycleTheme,
+    },
+    {
       keys: '?',
       description: 'Show shortcuts',
       group: 'General',
@@ -114,22 +135,20 @@ export function AppShell() {
   return (
     <div className="min-h-dvh md:flex">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-slate-200/80 px-3 py-5 md:flex dark:border-white/5">
+      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line/80 px-3 py-5 md:flex">
         <Brand />
         {isDayPage && <DateNav date={date} setDate={setDate} className="mt-6 px-1" />}
         <nav className="mt-6 space-y-0.5" aria-label="Main">
           {NAV.map((n, i) => (
             <div key={n.to}>
-              {i === 3 && (
-                <div className="mx-2 my-3 border-t border-slate-200/80 dark:border-white/5" />
-              )}
+              {(i === 3 || i === SETTINGS) && <div className="mx-2 my-3 border-t border-line/80" />}
               <NavLink
                 to={hrefFor(n)}
                 className={({ isActive }) =>
                   `group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition ${
                     isActive
-                      ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-white/10 dark:text-white dark:ring-white/10'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white'
+                      ? 'bg-raised text-ink shadow-sm ring-1 ring-line'
+                      : 'text-ink-2 hover:bg-sunken hover:text-ink'
                   }`
                 }
               >
@@ -140,7 +159,7 @@ export function AppShell() {
             </div>
           ))}
         </nav>
-        <div className="mt-auto space-y-1 px-1 text-xs text-slate-500">
+        <div className="mt-auto space-y-1 px-1 text-xs text-ink-3">
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
@@ -159,9 +178,20 @@ export function AppShell() {
       </aside>
 
       {/* Mobile header */}
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-slate-200/80 bg-slate-50/85 px-4 pt-[max(env(safe-area-inset-top),0.5rem)] pb-2 backdrop-blur md:hidden dark:border-white/5 dark:bg-[#0b1120]/85">
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-line/80 bg-canvas/85 px-4 pt-[max(env(safe-area-inset-top),0.5rem)] pb-2 backdrop-blur md:hidden">
         <Brand compact />
-        {isDayPage && <DateNav date={date} setDate={setDate} />}
+        <div className="flex items-center gap-1">
+          {isDayPage && <DateNav date={date} setDate={setDate} />}
+          <NavLink
+            to="/settings"
+            aria-label="Settings"
+            className={({ isActive }) =>
+              `btn-ghost size-9 p-0 ${isActive ? 'bg-subtle text-accent' : ''}`
+            }
+          >
+            <Settings className="size-[18px]" />
+          </NavLink>
+        </div>
       </header>
 
       <main className="min-w-0 flex-1 px-4 pt-4 pb-28 sm:px-6 md:px-10 md:pt-8 md:pb-12">
@@ -173,15 +203,15 @@ export function AppShell() {
       {/* Mobile tab bar */}
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-slate-200/80 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden dark:border-white/5 dark:bg-slate-950/90"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line/80 bg-canvas/90 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
       >
-        {NAV.map((n) => (
+        {NAV.filter((n) => n.tab !== false).map((n) => (
           <NavLink
             key={n.to}
             to={hrefFor(n)}
             className={({ isActive }) =>
               `flex flex-col items-center gap-0.5 py-2 text-[10.5px] font-medium ${
-                isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-500'
+                isActive ? 'text-accent' : 'text-ink-3'
               }`
             }
           >
@@ -191,6 +221,7 @@ export function AppShell() {
         ))}
       </nav>
 
+      <PreferencesSync />
       <ShortcutHelp open={helpOpen} onClose={() => setHelpOpen(false)} />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
@@ -200,7 +231,7 @@ export function AppShell() {
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <NavLink to="/" className="flex items-center gap-2 px-1.5">
-      <span className="grid size-6 grid-cols-2 gap-[2px] rounded-md p-[3px] ring-1 ring-slate-200 dark:ring-white/10">
+      <span className="grid size-6 grid-cols-2 gap-[2px] rounded-md p-[3px] ring-1 ring-line">
         <span className="rounded-[2px] bg-rose-500" />
         <span className="rounded-[2px] bg-teal-600" />
         <span className="rounded-[2px] bg-amber-500" />
@@ -238,9 +269,7 @@ function DateNav({
         onClick={() => setDate(today())}
         title="Jump to today (.)"
         className={`min-w-[7.5rem] flex-1 rounded-lg px-2 py-1 text-center text-sm font-semibold ${
-          isToday
-            ? ''
-            : 'text-violet-600 hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-violet-500/10'
+          isToday ? '' : 'text-accent hover:bg-accent-soft'
         }`}
       >
         {relativeDayLabel(date)}
